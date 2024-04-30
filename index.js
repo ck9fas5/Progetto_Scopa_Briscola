@@ -1,9 +1,10 @@
+//in questo file è presente il codice del server
 const express = require("express");
 const http = require("http");
 const path = require("path");
 const app = express();
 const bodyParser = require("body-parser");
-const fs = require("fs");
+const socket = require("socket.io");
 
 app.use(bodyParser.json());
 app.use(
@@ -12,10 +13,13 @@ app.use(
   }),
 );
 
-app.use("/", express.static(path.join(__dirname, "public")));
+app.use("/", express.static(path.join(__dirname, "public/Documentazione")));
 
 
 const server = http.createServer(app);
 server.listen(80, () => {
   console.log("- server running");
 });
+
+
+
