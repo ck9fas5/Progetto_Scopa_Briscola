@@ -13,13 +13,9 @@ app.use(
   }),
 );
 
-app.use("/", express.static(path.join(__dirname, "public/Documentazione")));
-
+app.use("/", express.static(path.join(__dirname, "public")));
 
 const server = http.createServer(app);
 server.listen(80, () => {
   console.log("- server running");
 });
-
-
-

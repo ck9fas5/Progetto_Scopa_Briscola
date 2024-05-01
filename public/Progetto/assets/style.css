@@ -1,0 +1,18 @@
+body{
+  background-position: top;
+  background-color: #f5b770;
+}
+
+.login{
+  height: 25%;
+  width: 50%; 
+  background-color: rgba(255, 255, 255, 0.13);
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  border-radius: 30px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 20px ;
+  padding: 50px 35px
+}
