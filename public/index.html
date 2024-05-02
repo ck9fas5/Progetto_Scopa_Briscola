@@ -151,19 +151,19 @@
           <section id="ipoteesiinfrastruttura">
             <h2>Ipotesi infrastruttura</h2>
             <p>
-              l'infrastruttura comprenderà un Server su cui girerà Node.JS, il quale operera il nostro progetto distibuito, inoltre l'infrastruttura comprenderà anche un Database con MySQL, la comunicazione tra gli host e il server avverrà o tramite socket quando c'è necessità di azioni o aggiornamenti in tempo reale, invece con http le richeste che non necessitano del tempo reale.<br>
-              Schematizzando l'infrastruttura comprendera: 
+              l'infrastruttura ipotizzata comprende un 
               <ul>
                 <li><strong>Frontend:</strong>Un'aplicazione web che gli utenti utilizzeranno per giocare e osservare altre partite</li>
-                <li><strong>Backend:</strong>Un server che gestisce la logica di gioco e la comunicazione tra i giocatori, con al interno Node.js<br>
+                <li><strong>Backend:</strong>Un server che gestisce la logica di gioco e la comunicazione tra i giocatori.<br>
                 Responsabilità:<ul>
                   <li>Gestione delle partite in corso</li>
                   <li>Autenticazione degli utenti</li>
                   <li>Comunicazione in tempo reale tra i giocatori ,utilizzando Web Socket</li>
-                  <li>Fornire dati,utilizzando HTTP</li>
                 <li>Calcolo dei punteggi finali</li></ul></li>
-              <li><strong>DB:</strong>Un DB, per memorizzare i dati degli utenti, le partite in corso e i punteggi, gestito dal DBMS MySQL</li>
+              <li><strong>DB:</strong>Un DB, per memorizzare i dati degli utenti, le partite in corso e i punteggi</li>
               <li><strong>Autenticazione: </strong>implementare un sistema di autenticazione sicuro per gestire l'accesso degli utenti</li>
+              <li><strong>Gestione delle partite: </strong>implementare un sistema per tenere traccia delle partite in corso e calcorare lato server i punteggi a fine partita</li>
+                <li><strong>Configurazione delle Regole di Gioco: </strong>Definire le regole specifiche per la briscola e la scopa, e gestire le diverse "mani" di gioco</li>
               </ul>
             </p>
           </section>
@@ -204,7 +204,7 @@
 
               <section id="link">
                 <h2>Link al progetto</h2>
-                <a href="/Progetto/login.html">Link al progetto</a>
+                <a href="/Progetto/pagina_principale.html">Link al progetto</a>
    </section>
 
         </div>
