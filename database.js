@@ -1,6 +1,6 @@
 const mysql = require("mysql2");
 const conf = require("./conf.js");
-console.log(conf);
+//console.log(conf);
 const connection = mysql.createConnection(conf);
 
 const executeQuery = (sql) => {
@@ -59,13 +59,16 @@ const formatted_values = (values) => {
 };
 
 const getting = async (table) => {
-  return await executeQuery(`SELECT * FROM ${table}`);
+  objects = await executeQuery(`SELECT * FROM ${table}`);
+  return objects;
 };
 
 const insert = async (table, data) => {
-  return await executeQuery(
-    `INSERT INTO ${table} (${Object.keys(data).join()}) VALUES (${formatted_values(data)})`,
-  );
+  const query = `
+   INSERT INTO ${table} (${Object.keys(data).join()})
+   VALUES (${formatted_values(data)})
+      `;
+  return executeQuery(query);
 };
 
 const get_partite_in_corso = async () => {
@@ -75,15 +78,18 @@ const get_partite_in_corso = async () => {
 const checkLogin = async (username, password) => {
   // check nel database dell'esistenza dell'utente
   // ritorna 0 o 1
-  return (
-    await executeQuery(
-      `
-  SELECT * FROM User
-  WHERE Utente.username = '${username}'
-    AND Utente.password = '${password}'
-  `,
-    )
-  ).length;
+  let user = await executeQuery(
+    `
+     SELECT * FROM User
+     WHERE User.username = '${username}'
+       AND User.password = '${password}'
+     `,
+  );
+  if (user.length === 1) {
+    return true;
+  } else {
+    return false;
+  }
 };
 
 const connect = async (id_utente) => {
