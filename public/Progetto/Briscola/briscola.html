@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1.0, shrink-to-fit=no"
+    />
+    <meta
+      name="description"
+      content="Your ThemeForest item Name and description"
+    />
+    <meta name="author" content="harnishdesign.net" />
+
+    <title>Briscola</title>
+    <link href="../assets/style.css" rel="stylesheet" />
+    <link href="../assets/immagini/logo1.jpg" rel="icon" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://getbootstrap.com/docs/5.2/assets/css/docs.css"
+      rel="stylesheet"
+    />
+    <link href="../assets/login.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+
+  <body data-spy="scroll" data-target=".idocs-navigation" data-offset="125">
+    <nav class="navbar navbar-expand-lg bg-dark">
+      <div class="container-fluid">
+        <img
+          src="../assets/immagini/logo.jpg"
+          alt="logo"
+          width="55"
+          height="55"
+          class="rounded-circle m-2"
+        />
+        <p class="h3 text-light"><strong>Briscola</strong></p>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div
+          class="collapse navbar-collapse d-flex flex-row-reverse"
+          id="navbarNav"
+        >
+          <ul class="navbar-nav text-light">
+            <li class="nav-item p-2">
+              <button id="room" class="btn border-0 nav-link active text-light">
+                Crea un stanza
+              </button>
+            </li>
+            <li class="nav-item p-2">
+              <a class="nav-link text-light" href="../pagina_principale.html"
+                >Homepage</a
+              >
+            </li>
+            <li class="nav-item p-2">
+              <button type="button" class="btn border-0" id="logout">
+                log-out
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container" id="pre-game">
+      <div class="custom-container">
+        <img src="../assets/immagini/carte.jpg" class="immagine" />
+      </div>
+      <br />
+      <div class="d-flex bd-highlight mb-3">
+        <div class="me-auto p-2 bd-highlight">
+          <button id="utenti_connessi" class="btn btn-outline-info">
+            Visualizza gli utenti connessi
+          </button>
+        </div>
+        <div id="div_utenti"></div>
+
+        <div class="p-2 bd-highlight">
+          <button id="partite_in_corso" class="btn btn-outline-info">
+            Visualizza le partite in corso
+          </button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="d-flex justify-content-center">
+          <button
+            id="regole"
+            class="btn btn-outline-info"
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModal"
+          >
+            Regole
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="modal fade"
+        id="exampleModal"
+        tabindex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">
+                Regole di briscola
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              1.<strong>Mazzo di carte</strong>: Per giocare a Briscola, si
+              utilizza un mazzo di 40 carte italiane tradizionali, divise in
+              quattro semi: denari, coppe, spade e bastoni, ciascuno di 10
+              carte. Nel mazzo vi sono un totale di 120 punti. Pertanto, vincerà
+              il round chi ne realizza almeno 61 punti; se i punti sono 60, il
+              round è considerato pari.<br />2.
+              <strong>Distribuzione delle carte</strong>: Una volta mischiato il
+              mazzo, ogni giocatore riceve tre carte, distribuite insieme ed in
+              senso antiorario. Viene poi scoperta la prima carta del mazzo, che
+              designerà il seme di Briscola. Quest'ultima viene messa per metà
+              sotto al restante mazzo coperto, cosicché resterà sempre visibile
+              ai giocatori durante lo svolgimento del round e sarà l'ultima
+              carta ad essere pescata.<br />
+              3.<strong>Partita e numero di round</strong>: Le partite di
+              Briscola non prevedono un numero prestabilito di round.
+              Solitamente, le partite si giocano a 1, 3 o 5 round. Vince la
+              partita chi si aggiudica il maggior numero di round tra quelli
+              previsti.<br />
+              4.<strong>Svolgimento delle mani</strong>: Inizia il giocatore
+              seduto alla destra di colui che ha distribuito le carte, e si
+              procede poi in senso antiorario. Ogni giocatore cercherà di
+              aggiudicarsi la mano giocando la carta che ritiene più opportuna
+              al fine di totalizzare il maggior numero di punti. Nella Briscola
+              a 4 giocatori, i punti vengono sommati tra i giocatori della
+              stessa squadra. Colui che si aggiudica la mano inizierà il gioco
+              nella mano successiva. <br />5.<strong
+                >Criteri per aggiudicarsi una mano</strong
+              >: <br />- Il primo giocatore a giocare una carta (detto giocatore
+              di mano) determina con la stessa il seme di mano.<br />
+              - I giocatori successivi non hanno alcun obbligo di giocare un
+              particolare seme come invece avviene per giochi come il
+              tressette.<br />
+              - La mano è temporaneamente aggiudicata da un altro giocatore se
+              questi posa sul tavolo una carta del seme di mano con valore di
+              presa maggiore, o una carta del seme di Briscola anche se con
+              valore di presa inferiore.<br />
+              - Alla fine, quando tutti i giocatori avranno posato una carta sul
+              tavolo, si aggiudicherà la mano colui che ha posato la carta di
+              Briscola con valore di presa maggiore, o, in mancanza, da colui
+              che ha giocato la carta del seme di mano con valore di presa
+              maggiore; in mancanza di carte del seme di Briscola o di carte del
+              seme di mano, vince il primo giocatore di mano in quanto l'unico
+              ad aver posato una carta del seme di mano. Essendo il seme di mano
+              determinato di volta in volta dalla prima carta giocata, può
+              coincidere col seme di Briscola ed in questo caso la mano è
+              aggiudicata da chi gioca il seme di Briscola con valore di presa
+              maggiore.<br />
+              Buon divertimento con la Briscola! 🃏
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="alert alert-warning alert-dismissible fade"
+        role="alert"
+        id="alert_invite"
+      ></div>
+      <button
+        class="btn btn-primary d-none"
+        id="startgame"
+        disabled
+        data-bs-dismiss="alert"
+      >
+        Inizia partita
+      </button>
+    </div>
+    <div class="container d-none" id="game">
+      <p class="bg-primary">STAI GIOCANDO</p>
+      <button class="btn btn-primary d-none" id="passturn">
+        Passa il turno
+      </button>
+    </div>
+  </body>
+  <script src="./src/briscola.js" type="module"></script>
+</html>

@@ -89,3 +89,15 @@ button:active {
   -moz-transition: box-shadow 0.2s ease-in;
   transition: box-shadow 0.2s ease-in;
 }
+
+.immagine{
+  width: 30%;
+  height: 30%;
+}
+
+.custom-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+}

@@ -28,10 +28,8 @@ registrati.onclick = () => {
     const password = document.getElementById("password");
     let response = await registra(username.value, password.value);
     if (response.result === "ok") {
-      Cookies.set("credentials", {
-        username: username.value,
-        password: password.value,
-      });
+      Cookies.set("username", username.value);
+      Cookies.set("password", password.value);
       location.href = "/Progetto/pagina_principale.html";
     } else {
       div.innerHTML = "Accesso non autorizzato, controlla username e password";
@@ -50,6 +48,7 @@ send.onclick = async () => {
       "password",
       password.value,
     ) /*ricordarsi quando si fara il logout di cancellare i cookie*/;
+
     location.href = "/Progetto/pagina_principale.html";
   } else {
     div.innerHTML =

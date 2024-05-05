@@ -1,6 +1,5 @@
 const mysql = require("mysql2");
 const conf = require("./conf.js");
-//console.log(conf);
 const connection = mysql.createConnection(conf);
 
 const executeQuery = (sql) => {
@@ -28,7 +27,8 @@ const createTable = async () => {
   await executeQuery(`CREATE TABLE IF NOT EXISTS Card
       ( id INT PRIMARY KEY AUTO_INCREMENT, 
          number INT NOT NULL, 
-         suit VARCHAR(255) NOT NULL
+         suit VARCHAR(255) NOT NULL,
+         code VARCHAR(255) NOT NULL
          ) `);
 
   await executeQuery(`CREATE TABLE IF NOT EXISTS Game
@@ -59,7 +59,7 @@ const formatted_values = (values) => {
 };
 
 const getting = async (table) => {
-  objects = await executeQuery(`SELECT * FROM ${table}`);
+  let objects = await executeQuery(`SELECT * FROM ${table}`);
   return objects;
 };
 
@@ -93,19 +93,21 @@ const checkLogin = async (username, password) => {
 };
 
 const connect = async (id_utente) => {
-  return await executeQuery(`
+  await executeQuery(`
   UPDATE User 
   SET User.status=1
   WHERE User.id= ${id_utente}
   `);
+  return { result: "ok" };
 };
 
 const disconnect = async (id_utente) => {
-  return await executeQuery(`
+  await executeQuery(`
   UPDATE User 
   SET User.status=0
   WHERE User.id= ${id_utente}
   `);
+  return { result: "ok" };
 };
 
 module.exports = {
