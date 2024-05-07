@@ -19,7 +19,7 @@ export const render_alert = (invite, username) => {
 
 export const render_utenti = (users) => {
   const templateuser = `<tr>
-                        <td colspan="2">#USERNAME</td>
+                        <td colspan="3">#USERNAME</td>
                         <td><button class="btn btn-info invite" value="#ID" type="button" data-bs-dismiss="modal">Invita</button></td>
                       </tr>`;
 
@@ -32,18 +32,35 @@ export const render_utenti = (users) => {
   return html;
 };
 
-export const render_tavolo = async (hand, game) => {
-  const pre_game = document.getElemebtById("pre-game");
-  pre_game.classlist.add("d-none");
+export const render_tavolo = async (hand, game, pre_game) => {
+  pre_game.classList.add("d-none");
   game.classList.remove("d-none");
-  game.classList.add("d-flex");
-  const template = `<div class="container">
-  
+  game.classList.add("d-block");
+  const template = `
+  <div id="game-table">
+    <div class="player-card1">Carte1</div>
+    <div class="player-card2">Carte2</div>
+    <div class="player-card3">Carte3</div>
+    <div class="player-card4">Carte4</div>
+    <div id="deck">Mazzo</div>
   </div>`;
 };
 
 export const render_paritite = (partite) => {
-  const template_partite = "";
+  const template_partite = `<tr>
+                              <td colspan="3">#ID</td>
+                              <td colspan="3">#USERNAME</td>
+                              <td><button class="btn btn-info invite" value="#ID" type="button" data-bs-dismiss="modal">Assisti</button></td>
+                            </tr>`;
   let html = "";
+  partite.forEach((p) => {
+    let text_user = "";
+    p.users.forEach((u) => {
+      text_user += u + ", ";
+    });
+    html += template_partite
+      .replaceAll("#ID", p.game.room)
+      .replace("#USERNAME", text_user);
+  });
   return html;
 };

@@ -127,6 +127,8 @@
         </div>
       </div>
 
+      <img id="img" />
+
       <div
         class="modal fade"
         id="exampleModal"
@@ -209,8 +211,16 @@
       >
         Inizia partita
       </button>
+      <button type="button" id="tavolo" class="btn">Tavolo</button>
     </div>
-    <div class="container d-none" id="game"></div>
+
+    <div class="d-none game_table" id="game">
+      <div class="player_card1" id="giocatore_principale"></div>
+      <div class="player_card2" id="giocatore2"></div>
+      <div class="player_card3" id="giocatore3"></div>
+      <div class="player_card4" id="giocatore4"></div>
+      <div class="deck">Mazzo</div>
+    </div>
     <!-- modale lista utenti -->
     <!-- Modal -->
     <div
@@ -252,7 +262,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Utenti connessi</th>
+                  <th colspan="3">Utenti connessi</th>
                   <td></td>
                 </tr>
               </thead>
@@ -289,11 +299,12 @@
             <table>
               <thead>
                 <tr>
-                  <th>Partite in Corso</th>
+                  <th colspan="5" class="m-2">Partite in Corso</th>
+                  <th colspan="3">Utenti connessi</th>
                   <td></td>
                 </tr>
               </thead>
-              <tbody id="bodymodal"></tbody>
+              <tbody id="partitemodal"></tbody>
             </table>
           </div>
           <div class="modal-footer" id="bodymodal"></div>

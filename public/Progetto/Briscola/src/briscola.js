@@ -5,14 +5,17 @@ import {
   render_alert,
   render_utenti,
   render_tavolo,
+  render_paritite,
 } from "../../src/render.js";
-
+const img = document.getElementById("img");
+img.src = "../../assets/card/assoBastoni.png";
 const div_prepartita = document.getElementById("pre-game");
 const b_listutenti = document.getElementById("utenti_connessi");
 const b_createRoom = document.getElementById("createroom");
 const n_listpartite = document.getElementById("partite_in_corso");
-const game = document.getElementById("game");
+const tavolo = document.getElementById("tavolo"); //prova, da cancellare
 const alert_invite = document.getElementById("alert_invite");
+const partitemodal = document.getElementById("partitemodal");
 const bodymodal = document.getElementById("bodymodal");
 const logout = document.getElementById("logout");
 
@@ -21,18 +24,22 @@ const div_game = document.getElementById("game");
 const b_startgame = document.getElementById("startgame");
 const b_passturn = document.getElementById("passturn");
 
-let room = "";
 let hand;
+let socket;
 
-const socket = io();
-if (
-  Cookies.get("username") == undefined &&
-  Cookies.get("password") == undefined
-) {
-  location.href = "/Progetto/login.html";
-}
+(function () {
+  if (
+    Cookies.get("username") == undefined &&
+    Cookies.get("password") == undefined
+  ) {
+    location.href = "/Progetto/login.html";
+  } else {
+    socket = io();
+    socket.emit("accesso", Cookies.get("password"), Cookies.get("username"));
+  }
+})();
 
-socket.emit("accesso", Cookies.get("password"), Cookies.get("username"));
+let room = socket.id;
 
 socket.on("invited", (utente) => {
   console.log(utente);
@@ -100,6 +107,8 @@ b_listutenti.onclick = async () => {
 
 n_listpartite.onclick = async () => {
   let partite = await GetPartite();
+  console.log(partite.games);
+  partitemodal.innerHTML = render_paritite(partite.games);
 };
 
 b_createRoom.onclick = () => {
@@ -112,6 +121,12 @@ logout.onclick = () => {
   cookies.set("username", "");
   cookies.set("password", "");
   location.href = "/Progetto/login.html";
+};
+
+tavolo.onclick = () => {
+  alert_invite.classList.remove("d-block");
+  alert_invite.classList.add("d-none");
+  render_tavolo(hand, div_game, div_prepartita);
 };
 
 //https://uiverse.io/Navarog21/ordinary-rat-19 usare questo bottone bellissimo

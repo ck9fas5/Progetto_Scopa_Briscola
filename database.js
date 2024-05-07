@@ -38,12 +38,12 @@ const createTable = async () => {
 
   await executeQuery(` CREATE TABLE IF NOT EXISTS Play(
        id_giocatore INT,
-       id_partita INT,
+       id_partita VARCHAR(255),
        FOREIGN KEY (id_giocatore) REFERENCES User(id),
        FOREIGN KEY (id_partita) REFERENCES Game(id),
        PRIMARY KEY (id_giocatore, id_partita)
     )`);
-  //await executeQuery(` DROP TABLE Play`);
+  /*await executeQuery(` DROP TABLE Play`);*/
 };
 
 const formatted_values = (values) => {

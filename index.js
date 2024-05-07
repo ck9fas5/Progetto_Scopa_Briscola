@@ -31,6 +31,7 @@ app.use(
 );
 
 app.use("/", express.static(path.join(__dirname, "public")));
+app.use("/", express.static(path.join(__dirname, "assets")));
 
 const server = http.createServer(app);
 server.listen(3000, () => {
@@ -97,27 +98,30 @@ app.get("/user_get", async (req, res) => {
 });
 
 app.get("/game_get", async (req, res) => {
-  let gam = await GetPartite("Game");
-  let users = await db.getting("User");
-  console.log(gam);
-  console.log(users);
-  let gams = [];
-  let use = [];
-  gam.forEach((gm, indi) => {
-    let game = games.find((g = g.room === gm.id));
-    let use = [];
-    game.users.forEach((u, indi) => {
-      use.push(
-        use.find(
-          (use) => use.id === users_socket.find((us) => us.socket_id === u).id,
-        ).username,
-      );
+  if (users_socket.length !== 0) {
+    let partite = await GetPartite("Game");
+    let users = await db.getting("User");
+    /*console.log(partite);*/
+    /*console.log(users);*/
+    let list_games = [];
+    partite.forEach((gm, indi) => {
+      let game = games.find((g) => g.room === gm.id);
+      let user = [];
+      if (game !== undefined) {
+        game.users.forEach((u, indi) => {
+          user.push(
+            users.find(
+              (use) =>
+                use.id === users_socket.find((us) => us.socket_id === u).user,
+            ).username,
+          );
+        });
+        list_games.push({ game: game, users: user });
+      }
     });
-    console.log(use);
-    gams.push({ game: game, users: use });
-  });
-  console.log(gams);
-  res.json({ games: gams });
+    console.log(list_games);
+    res.json({ games: list_games });
+  }
 });
 
 io.on("connection", (socket) => {
@@ -137,8 +141,8 @@ io.on("connection", (socket) => {
   socket.on("join games", (game) => {
     socket.join(game);
     if (games.find((g) => g.room === game) === undefined) {
-      games.push({ room: game, users: [socket.id], state: false });
-      db.insert("Game",{id:game,})
+      games.push({ room: game, users: [socket.id] });
+      db.insert("Game", { id: game, status: "false" });
     } else {
       let room = games.find((g) => g.room === game);
       list_users = room.users;
