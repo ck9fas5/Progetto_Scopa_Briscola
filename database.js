@@ -32,7 +32,7 @@ const createTable = async () => {
          ) `);
 
   await executeQuery(`CREATE TABLE IF NOT EXISTS Game
-         ( id INT PRIMARY KEY AUTO_INCREMENT, 
+         ( id INT PRIMARY KEY, 
             status VARCHAR(255) NOT NULL
             ) `);
 
@@ -43,6 +43,7 @@ const createTable = async () => {
        FOREIGN KEY (id_partita) REFERENCES Game(id),
        PRIMARY KEY (id_giocatore, id_partita)
     )`);
+  //await executeQuery(` DROP TABLE Play`);
 };
 
 const formatted_values = (values) => {
@@ -68,7 +69,13 @@ const insert = async (table, data) => {
    INSERT INTO ${table} (${Object.keys(data).join()})
    VALUES (${formatted_values(data)})
       `;
-  return executeQuery(query);
+  return await executeQuery(query);
+};
+
+const impor = async (table, data) => {
+  return await executeQuery(
+    `UPDATE ${table} SET ${Object.keys(data)} = ${formatted_values(data)}`,
+  );
 };
 
 const get_partite_in_corso = async () => {
@@ -118,4 +125,5 @@ module.exports = {
   getting: getting,
   createTable: createTable,
   get_partite_in_corso: get_partite_in_corso,
+  impor: impor,
 };

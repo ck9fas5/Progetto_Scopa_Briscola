@@ -27,7 +27,7 @@ registrati.onclick = () => {
     const username = document.getElementById("username");
     const password = document.getElementById("password");
     let response = await registra(username.value, password.value);
-    if (response.result === "ok") {
+    if (response === "ok") {
       Cookies.set("username", username.value);
       Cookies.set("password", password.value);
       location.href = "/Progetto/pagina_principale.html";

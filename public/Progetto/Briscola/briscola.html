@@ -59,8 +59,11 @@
         >
           <ul class="navbar-nav text-light">
             <li class="nav-item p-2">
-              <button id="room" class="btn border-0 nav-link active text-light">
-                Crea un stanza
+              <button
+                id="createroom"
+                class="btn border-0 nav-link active text-light"
+              >
+                Crea una stanza
               </button>
             </li>
             <li class="nav-item p-2">
@@ -77,7 +80,11 @@
         </div>
       </div>
     </nav>
-
+    <div
+      class="alert alert-warning alert-dismissible fade"
+      role="alert"
+      id="alert_invite"
+    ></div>
     <div class="container" id="pre-game">
       <div class="custom-container">
         <img src="../assets/immagini/carte.jpg" class="immagine" />
@@ -85,14 +92,24 @@
       <br />
       <div class="d-flex bd-highlight mb-3">
         <div class="me-auto p-2 bd-highlight">
-          <button id="utenti_connessi" class="btn btn-outline-info">
+          <button
+            id="utenti_connessi"
+            class="btn btn-outline-info"
+            data-bs-toggle="modal"
+            data-bs-target="#listutenti"
+          >
             Visualizza gli utenti connessi
           </button>
         </div>
         <div id="div_utenti"></div>
 
         <div class="p-2 bd-highlight">
-          <button id="partite_in_corso" class="btn btn-outline-info">
+          <button
+            id="partite_in_corso"
+            class="btn btn-outline-info"
+            data-bs-toggle="modal"
+            data-bs-target="#listpartite"
+          >
             Visualizza le partite in corso
           </button>
         </div>
@@ -184,11 +201,6 @@
         </div>
       </div>
 
-      <div
-        class="alert alert-warning alert-dismissible fade"
-        role="alert"
-        id="alert_invite"
-      ></div>
       <button
         class="btn btn-primary d-none"
         id="startgame"
@@ -198,11 +210,95 @@
         Inizia partita
       </button>
     </div>
-    <div class="container d-none" id="game">
-      <p class="bg-primary">STAI GIOCANDO</p>
-      <button class="btn btn-primary d-none" id="passturn">
-        Passa il turno
-      </button>
+    <div class="container d-none" id="game"></div>
+    <!-- modale lista utenti -->
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="listutenti"
+      tabindex="-1"
+      aria-labelledby="listutentiLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="listutentiLabel">Lista utenti</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="body">
+            <form class="d-felx" role="search">
+              <div class="row">
+                <div class="col-7">
+                  <input
+                    class="form-control me-2"
+                    type="search"
+                    placeholder="Search"
+                    aria-label="Search"
+                  />
+                </div>
+                <div class="col">
+                  <button class="btn btn-outline-info" type="submit">
+                    Cerca
+                  </button>
+                </div>
+              </div>
+            </form>
+            <table>
+              <thead>
+                <tr>
+                  <th>Utenti connessi</th>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody id="bodymodal"></tbody>
+            </table>
+          </div>
+          <div class="modal-footer" id="bodymodal"></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="listpartite"
+      tabindex="-1"
+      aria-labelledby="listpartiteLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="listpartiteLabel">
+              Lista Partite in corso
+            </h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="body">
+            <h3>Partite in Corso</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Partite in Corso</th>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody id="bodymodal"></tbody>
+            </table>
+          </div>
+          <div class="modal-footer" id="bodymodal"></div>
+        </div>
+      </div>
     </div>
   </body>
   <script src="./src/briscola.js" type="module"></script>

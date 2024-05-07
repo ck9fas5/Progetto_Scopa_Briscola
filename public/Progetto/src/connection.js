@@ -49,3 +49,14 @@ export async function getUsers() {
   response = await response.json();
   return response;
 }
+
+export async function GetPartite(){
+  let response = await fetch("/game_get", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  response = await response.json();
+  return response;
+}

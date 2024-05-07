@@ -1,16 +1,27 @@
 //in questo file è presente il codice javascript per la briscola
 //in questo file è presente il codice di scopa
-import { getUsers } from "../../src/connection.js";
+import { getUsers, GetPartite } from "../../src/connection.js";
+import {
+  render_alert,
+  render_utenti,
+  render_tavolo,
+} from "../../src/render.js";
 
 const div_prepartita = document.getElementById("pre-game");
-const div_game = document.getElementById("game");
-const div_prova = document.getElementById("div_utenti");
+const b_listutenti = document.getElementById("utenti_connessi");
+const b_createRoom = document.getElementById("createroom");
+const n_listpartite = document.getElementById("partite_in_corso");
+const game = document.getElementById("game");
 const alert_invite = document.getElementById("alert_invite");
-const b_startgame = document.getElementById("startgame");
-const b_passturn = document.getElementById("passturn");
+const bodymodal = document.getElementById("bodymodal");
 const logout = document.getElementById("logout");
 
-let room = "fhudsxhfierubvhdscvuk";
+const div_game = document.getElementById("game");
+
+const b_startgame = document.getElementById("startgame");
+const b_passturn = document.getElementById("passturn");
+
+let room = "";
 let hand;
 
 const socket = io();
@@ -39,7 +50,7 @@ socket.on("join user", (list_user) => {
   b_startgame.disabled = false;
   b_startgame.classList.remove("d-none");
   b_startgame.onclick = () => {
-    socket.emit("start game", room);
+    socket.emit("start game briscola", room);
   };
   console.log(list_user);
 });
@@ -53,57 +64,47 @@ socket.on("star", (istance) => {
   hand = istance.hand;
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
+  render_tavolo(hand, game);
 });
 
-socket.on("start turn", () => {
+socket.on("start turn briscola", () => {
   b_passturn.classList.remove("d-none");
   b_passturn.onclick = () => {
     console.log(hand);
     let pcard = hand[Math.floor(Math.random() * hand.length)];
     hand.splice(hand.indexOf(pcard), 1);
     b_passturn.classList.add("d-none");
-    socket.emit("end turn", { room: room, card: pcard });
+    socket.emit("end turn briscola", { room: room, card: pcard });
   };
   //console.log(hand);
 });
 
-const render_alert = (invite) => {
-  let alarm_tempalte = `<strong>Sei stato invitato da #USERNAME!</strong>
-                      <p class="mb-0">
-                          <button type="button" id="button_accept"class="btn btn-outline-success">Accetta</button>
-                          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></p>`;
-  let html = "";
-  html += alarm_tempalte.replace("#USERNAME", invite.username);
-  return html;
-};
-
-const render_prova = async () => {
-  let template = `<div class="row p-1 mb-3 bg-primary">
-              <p>#USERID</p>
-              <button value="#USERVAL" class="btn btn-primary buto">Invita</button>
-            </div>`;
-  let html = "";
+b_listutenti.onclick = async () => {
   let users = await getUsers();
   console.log(users);
-  users.users.forEach((u) => {
-    html += template
-      .replace("#USERID", u.id_user)
-      .replace("#USERVAL", u.id_user);
-  });
-  div_prova.innerHTML = html;
-  let buttons = document.querySelectorAll(".buto");
+  bodymodal.innerHTML = render_utenti(users.users);
+  let buttons = document.querySelectorAll(".invite");
   buttons.forEach((b) => {
     b.onclick = () => {
-      socket.emit("invite user", parseInt(b.value));
+      if (room !== "") {
+        socket.emit("invite user", parseInt(b.value));
+      } else {
+        alert_invite.innerHTML = render_alert("", "");
+        alert_invite.classList.add("show");
+        let myModal = new bootstrap.Modal("#listutenti", {});
+        myModal.hide();
+      }
     };
   });
 };
 
-document.getElementById("utenti_connessi").onclick = () => {
-  render_prova();
+n_listpartite.onclick = async () => {
+  let partite = await GetPartite();
 };
 
-document.getElementById("room").onclick = () => {
+b_createRoom.onclick = () => {
+  b_createRoom.disabled = true;
+  room = socket.id;
   socket.emit("join games", room);
 };
 

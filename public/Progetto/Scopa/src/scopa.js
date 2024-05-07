@@ -3,10 +3,11 @@ import { getUsers } from "../../src/connection.js";
 
 const div_prepartita = document.getElementById("pre-game");
 const div_game = document.getElementById("game");
-const div_prova = document.getElementById("prova");
+const div_prova = document.getElementById("div_utenti");
 const alert_invite = document.getElementById("alert_invite");
 const b_startgame = document.getElementById("startgame");
 const b_passturn = document.getElementById("passturn");
+const logout = document.getElementById("logout");
 
 let room = "fhudsxhfierubvhdscvuk";
 let hand;
@@ -97,12 +98,18 @@ const render_prova = async () => {
   });
 };
 
-document.getElementById("bprova").onclick = () => {
+document.getElementById("utenti_connessi").onclick = () => {
   render_prova();
 };
 
 document.getElementById("room").onclick = () => {
   socket.emit("join games", room);
+};
+
+logout.onclick = () => {
+  cookies.set("username", "");
+  cookies.set("password", "");
+  location.href = "/Progetto/login.html";
 };
 
 //https://uiverse.io/Navarog21/ordinary-rat-19 usare questo bottone bellissimo
