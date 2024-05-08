@@ -104,34 +104,107 @@ button:active {
 
 .game_table {
   width: 100%;
-  height: 100%;
-  background-color: #52ff52;
-  position: absolute;
+  height: 775px;
+  display: flex;
+  flex-direction:column;
+  row-gap:0;
+  background-color: #4be24b;
+}
+
+
+#row1{
+  width: 60%;
+  height:20%;
+  margin:auto;
+}
+#row2{
+  height:60%;
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  
 }
 
 .player_card1{
-  position: fixed;
-  top: 90%;
-  left:50%;
-  
+  /*background-color:red;*/
+  display:flex;
+  flex-direction:row;
+  justify-content:space-between;
+  padding-right:30%;
+  padding-left:30%;
+  /*
+  position:absolute; 
+  top: 80%;
+  left:35%;
+  width:30%;
+  height:25%*/
 }
 .player_card2{
- position:fixed; 
-  bottom: 80%;
-  left:50%;
+  /*background-color:#906464;*/
+  display:flex;
+  flex-direction:row;
+  justify-content:space-between;
+  padding-right:30%;
+  padding-left:30%;
+  /*
+  position:absolute; 
+  top: 15%;
+  left:35%;
+  width:30%;
+  height:25%*/
 }
 .player_card3{
-  position:fixed; 
-  bottom: 50%;
-  left:0%;
+  /*background-color:#0011ff;*/
+  display:flex;
+  flex-direction:column;
+  padding-left:10%;
+  /*
+  position:absolute; 
+  bottom: 30%;
+  right:84%;
+  width:25%;
+  height:35%;
+  transform:rotate(90deg)*/
 }
 .player_card4{
-  position:fixed; 
-  bottom: 50%;
-  right:0%;
+  /*background-color:#18f708;*/
+  display:flex;
+  flex-direction:column;
+  
+  /*
+  position:absolute; 
+  bottom: 30%;
+  left:78%;
+  width:25%;
+  height:50%;
+  transform:rotate(90deg)*/
 }
+
+.spazio_gioco{
+  position: relative;
+background-color: #47cd47;}
+
+.played{
+  /*background-color:#000000;*/
+  position: absolute;
+  top:30%;
+  left:70%;
+  width:20%;
+  height:45%
+}
+
 .deck{
-  position:fixed;
-  top:50%;
-  left:50%
+  /*background-color:#f708d7;*/
+  position: absolute;
+  top:30%;
+  left:10%;
+  width:50%;
+  height:40%
+}
+
+.immagine_ruotata{
+  transform:rotate(90deg)
+}
+
+.carte_giocatore:hover{
+  transform:scale(1.1);
 }

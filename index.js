@@ -23,6 +23,11 @@ const GetPartite = async () => {
   return partite;
 };
 
+const GetCarte = async () => {
+  let cards = await db.getting("Card");
+  return cards;
+};
+
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
@@ -31,7 +36,6 @@ app.use(
 );
 
 app.use("/", express.static(path.join(__dirname, "public")));
-app.use("/", express.static(path.join(__dirname, "assets")));
 
 const server = http.createServer(app);
 server.listen(3000, () => {
@@ -129,12 +133,12 @@ io.on("connection", (socket) => {
 
   socket.on("accesso", async (password, username) => {
     let users = await GetUser("User");
-    //console.log(users, password, username);
-    let user_ = users.find(
+    console.log(users, password, username);
+    let user = users.find(
       (u) => u.password === password && u.username === username,
     );
     //console.log(user_);
-    users_socket.push({ user: user_.id, socket_id: socket.id });
+    users_socket.push({ user: user.id, socket_id: socket.id });
     console.log(users_socket);
   });
 
@@ -198,10 +202,18 @@ io.on("connection", (socket) => {
       let hands = sg.deck.slice(0, 3);
       sg.deck.splice(0, 3);
       if (indi === 0) {
-        io.to(u).emit("star", { hand: hands, briscola: sg.briscola }); //evento che lato client setapera il terreno di gioco
+        io.to(u).emit("star", {
+          hand: hands,
+          briscola: sg.briscola,
+          order: sg.order,
+        }); //evento che lato client setapera il terreno di gioco
         io.to(u).emit("start turn briscola");
       } else {
-        io.to(u).emit("star", { hand: hands, briscola: sg.briscola });
+        io.to(u).emit("star", {
+          hand: hands,
+          briscola: sg.briscola,
+          order: sg.order,
+        });
       }
     });
     console.log(started_games);
@@ -235,7 +247,7 @@ io.on("connection", (socket) => {
       sg.order.forEach((u, indi) => {
         let card = sg.deck.slice(0, 1);
         sg.deck.splice(0, 1);
-        io.to(u).emit("draw card", card[0]);
+        io.to(u).emit("draw card", { card: card[0], game: sg });
         if (indi === sg.index) {
           io.to(u).emit("start turn briscola");
         }
@@ -267,10 +279,10 @@ async function SetUpGame(room) {
   let order = room.users.slice(0);
   shuffleArray(order);
 
-  let deck = prova_deck;
+  let deck = await GetCarte();
   shuffleArray(deck);
 
-  let briscola = deck[deck.length - 1].seme;
+  let briscola = deck[deck.length - 1];
 
   let index = 0;
 
@@ -394,55 +406,81 @@ function punteggi_scopa(carte, ordine) {
       }
     });
   });
-
+  let cart = ordine.users.find((c) => c == l);
   return punteggi;
 }
 
 function calcolo_ordine(carte, briscola) {}
 
+/*
 let prova_deck = [
-  { seme: "Cuori", valore: "1" },
-  { seme: "Cuori", valore: "2" },
-  { seme: "Cuori", valore: "3" },
-  { seme: "Cuori", valore: "4" },
-  { seme: "Cuori", valore: "5" },
-  { seme: "Cuori", valore: "6" },
-  { seme: "Cuori", valore: "7" },
-  { seme: "Cuori", valore: "8" },
-  { seme: "Cuori", valore: "9" },
-  { seme: "Cuori", valore: "10" },
+  { seme: "Spade", valore: "1", path: "Progetto/assets/card/assoSpade.png" },
+  { seme: "Spade", valore: "2", path: "Progetto/assets/card/dueSpade.png" },
+  { seme: "Spade", valore: "3", path: "Progetto/assets/card/treSpade.png" },
+  { seme: "Spade", valore: "4", path: "Progetto/assets/card/quattroSpade.png" },
+  { seme: "Spade", valore: "5", path: "Progetto/assets/card/cinqueSpade.png" },
+  { seme: "Spade", valore: "6", path: "Progetto/assets/card/assoSpade.png" },
+  { seme: "Spade", valore: "7", path: "Progetto/assets/card/setteSpade.png" },
+  { seme: "Spade", valore: "8", path: "Progetto/assets/card/dSpade.png" },
+  { seme: "Spade", valore: "9", path: "Progetto/assets/card/cSpade.png" },
+  { seme: "Spade", valore: "10", path: "Progetto/assets/card/rSpade.png" },
   // Aggiungi altre carte di Cuori...
-  { seme: "Quadri", valore: "1" },
-  { seme: "Quadri", valore: "2" },
-  { seme: "Quadri", valore: "3" },
-  { seme: "Quadri", valore: "4" },
-  { seme: "Quadri", valore: "5" },
-  { seme: "Quadri", valore: "6" },
-  { seme: "Quadri", valore: "7" },
-  { seme: "Quadri", valore: "8" },
-  { seme: "Quadri", valore: "9" },
-  { seme: "Quadri", valore: "10" },
+  { seme: "Denari", valore: "1", path: "Progetto/assets/card/assoDenari.png" },
+  { seme: "Denari", valore: "2", path: "Progetto/assets/card/dueDenari.png" },
+  { seme: "Denari", valore: "3", path: "Progetto/assets/card/treDenari.png" },
+  {
+    seme: "Denari",
+    valore: "4",
+    path: "Progetto/assets/card/quattroDenari.png",
+  },
+  {
+    seme: "Denari",
+    valore: "5",
+    path: "Progetto/assets/card/cinqueDenari.png",
+  },
+  { seme: "Denari", valore: "6", path: "Progetto/assets/card/seiDenari.png" },
+  { seme: "Denari", valore: "7", path: "Progetto/assets/card/setteDenari.png" },
+  { seme: "Denari", valore: "8", path: "Progetto/assets/card/dDenari.png" },
+  { seme: "Denari", valore: "9", path: "Progetto/assets/card/cDenari.png" },
+  { seme: "Denari", valore: "10", path: "Progetto/assets/card/rDenari.png" },
   // Aggiungi altre carte di Quadri...
-  { seme: "Fiori", valore: "1" },
-  { seme: "Fiori", valore: "2" },
-  { seme: "Fiori", valore: "3" },
-  { seme: "Fiori", valore: "4" },
-  { seme: "Fiori", valore: "5" },
-  { seme: "Fiori", valore: "6" },
-  { seme: "Fiori", valore: "7" },
-  { seme: "Fiori", valore: "8" },
-  { seme: "Fiori", valore: "9" },
-  { seme: "Fiori", valore: "1" },
+  { seme: "Coppe", valore: "1", path: "Progetto/assets/card/assoCoppe.png" },
+  { seme: "Coppe", valore: "2", path: "Progetto/assets/card/dueCoppe.png" },
+  { seme: "Coppe", valore: "3", path: "Progetto/assets/card/treCoppe.png" },
+  { seme: "Coppe", valore: "4", path: "Progetto/assets/card/quattroCoppe.png" },
+  { seme: "Coppe", valore: "5", path: "Progetto/assets/card/cinqueCoppe.png" },
+  { seme: "Coppe", valore: "6", path: "Progetto/assets/card/seiCoppe.png" },
+  { seme: "Coppe", valore: "7", path: "Progetto/assets/card/setteCoppe.png" },
+  { seme: "Coppe", valore: "8", path: "Progetto/assets/card/dCoppe.png" },
+  { seme: "Coppe", valore: "9", path: "Progetto/assets/card/cCoppe.png" },
+  { seme: "Coppe", valore: "10", path: "Progetto/assets/card/rCoppe.png" },
   // Aggiungi altre carte di Fiori...
-  { seme: "Picche", valore: "1" },
-  { seme: "Picche", valore: "2" },
-  { seme: "Picche", valore: "3" },
-  { seme: "Picche", valore: "4" },
-  { seme: "Picche", valore: "5" },
-  { seme: "Picche", valore: "6" },
-  { seme: "Picche", valore: "7" },
-  { seme: "Picche", valore: "8" },
-  { seme: "Picche", valore: "9" },
-  { seme: "Picche", valore: "10" },
+  {
+    seme: "Bastoni",
+    valore: "1",
+    path: "Progetto/assets/card/assoBastoni.png",
+  },
+  { seme: "Bastoni", valore: "2", path: "Progetto/assets/card/dueBastoni.png" },
+  { seme: "Bastoni", valore: "3", path: "Progetto/assets/card/treBastoni.png" },
+  {
+    seme: "Bastoni",
+    valore: "4",
+    path: "Progetto/assets/card/quattroBastoni.png",
+  },
+  {
+    seme: "Bastoni",
+    valore: "5",
+    path: "Progetto/assets/card/cinqueBastoni.png",
+  },
+  { seme: "Bastoni", valore: "6", path: "Progetto/assets/card/seiBastoni.png" },
+  {
+    seme: "Bastoni",
+    valore: "7",
+    path: "Progetto/assets/card/setteBastoni.png",
+  },
+  { seme: "Bastoni", valore: "8", path: "Progetto/assets/card/dBastoni.png" },
+  { seme: "Bastoni", valore: "9", path: "Progetto/assets/card/cBastoni.png" },
+  { seme: "Bastoni", valore: "10", path: "Progetto/assets/card/rBastoni.png" },
   // Aggiungi altre carte di Picche...
 ]; //mazzo provissorio in attesa di quello vero
+*/

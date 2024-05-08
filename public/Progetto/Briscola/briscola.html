@@ -72,8 +72,8 @@
               >
             </li>
             <li class="nav-item p-2">
-              <button type="button" class="btn border-0" id="logout">
-                log-out
+              <button type="button" class="btn border-0 text-light" id="logout">
+                Log-out
               </button>
             </li>
           </ul>
@@ -126,83 +126,6 @@
           </button>
         </div>
       </div>
-
-      <img id="img" />
-
-      <div
-        class="modal fade"
-        id="exampleModal"
-        tabindex="-1"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">
-                Regole di briscola
-              </h5>
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body">
-              1.<strong>Mazzo di carte</strong>: Per giocare a Briscola, si
-              utilizza un mazzo di 40 carte italiane tradizionali, divise in
-              quattro semi: denari, coppe, spade e bastoni, ciascuno di 10
-              carte. Nel mazzo vi sono un totale di 120 punti. Pertanto, vincerà
-              il round chi ne realizza almeno 61 punti; se i punti sono 60, il
-              round è considerato pari.<br />2.
-              <strong>Distribuzione delle carte</strong>: Una volta mischiato il
-              mazzo, ogni giocatore riceve tre carte, distribuite insieme ed in
-              senso antiorario. Viene poi scoperta la prima carta del mazzo, che
-              designerà il seme di Briscola. Quest'ultima viene messa per metà
-              sotto al restante mazzo coperto, cosicché resterà sempre visibile
-              ai giocatori durante lo svolgimento del round e sarà l'ultima
-              carta ad essere pescata.<br />
-              3.<strong>Partita e numero di round</strong>: Le partite di
-              Briscola non prevedono un numero prestabilito di round.
-              Solitamente, le partite si giocano a 1, 3 o 5 round. Vince la
-              partita chi si aggiudica il maggior numero di round tra quelli
-              previsti.<br />
-              4.<strong>Svolgimento delle mani</strong>: Inizia il giocatore
-              seduto alla destra di colui che ha distribuito le carte, e si
-              procede poi in senso antiorario. Ogni giocatore cercherà di
-              aggiudicarsi la mano giocando la carta che ritiene più opportuna
-              al fine di totalizzare il maggior numero di punti. Nella Briscola
-              a 4 giocatori, i punti vengono sommati tra i giocatori della
-              stessa squadra. Colui che si aggiudica la mano inizierà il gioco
-              nella mano successiva. <br />5.<strong
-                >Criteri per aggiudicarsi una mano</strong
-              >: <br />- Il primo giocatore a giocare una carta (detto giocatore
-              di mano) determina con la stessa il seme di mano.<br />
-              - I giocatori successivi non hanno alcun obbligo di giocare un
-              particolare seme come invece avviene per giochi come il
-              tressette.<br />
-              - La mano è temporaneamente aggiudicata da un altro giocatore se
-              questi posa sul tavolo una carta del seme di mano con valore di
-              presa maggiore, o una carta del seme di Briscola anche se con
-              valore di presa inferiore.<br />
-              - Alla fine, quando tutti i giocatori avranno posato una carta sul
-              tavolo, si aggiudicherà la mano colui che ha posato la carta di
-              Briscola con valore di presa maggiore, o, in mancanza, da colui
-              che ha giocato la carta del seme di mano con valore di presa
-              maggiore; in mancanza di carte del seme di Briscola o di carte del
-              seme di mano, vince il primo giocatore di mano in quanto l'unico
-              ad aver posato una carta del seme di mano. Essendo il seme di mano
-              determinato di volta in volta dalla prima carta giocata, può
-              coincidere col seme di Briscola ed in questo caso la mano è
-              aggiudicata da chi gioca il seme di Briscola con valore di presa
-              maggiore.<br />
-              Buon divertimento con la Briscola! 🃏
-            </div>
-          </div>
-        </div>
-      </div>
-
       <button
         class="btn btn-primary d-none"
         id="startgame"
@@ -214,15 +137,103 @@
       <button type="button" id="tavolo" class="btn">Tavolo</button>
     </div>
 
-    <div class="d-none game_table" id="game">
-      <div class="player_card1" id="giocatore_principale"></div>
-      <div class="player_card2" id="giocatore2"></div>
-      <div class="player_card3" id="giocatore3"></div>
-      <div class="player_card4" id="giocatore4"></div>
-      <div class="deck">Mazzo</div>
+    <div class="container-flex">
+      <div class="d-none game_table" id="game">
+        <div id="row1">
+          <div class="player_card2" id="giocatore2">2</div>
+        </div>
+
+        <div id="row2">
+          <div class="player_card3" id="giocatore3">3</div>
+          <div class="spazio_gioco">
+            <div class="played" id="deck">c</div>
+            <div class="deck">d</div>
+          </div>
+          <div class="player_card4" id="giocatore4">4</div>
+        </div>
+
+        <div id="row1">
+          <div class="player_card1" id="giocatore_principale">1</div>
+        </div>
+
+        <div class="player_card4" id="giocatore4"></div>
+      </div>
     </div>
     <!-- modale lista utenti -->
     <!-- Modal -->
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">
+              Regole di briscola
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            1.<strong>Mazzo di carte</strong>: Per giocare a Briscola, si
+            utilizza un mazzo di 40 carte italiane tradizionali, divise in
+            quattro semi: denari, coppe, spade e bastoni, ciascuno di 10 carte.
+            Nel mazzo vi sono un totale di 120 punti. Pertanto, vincerà il round
+            chi ne realizza almeno 61 punti; se i punti sono 60, il round è
+            considerato pari.<br />2.
+            <strong>Distribuzione delle carte</strong>: Una volta mischiato il
+            mazzo, ogni giocatore riceve tre carte, distribuite insieme ed in
+            senso antiorario. Viene poi scoperta la prima carta del mazzo, che
+            designerà il seme di Briscola. Quest'ultima viene messa per metà
+            sotto al restante mazzo coperto, cosicché resterà sempre visibile ai
+            giocatori durante lo svolgimento del round e sarà l'ultima carta ad
+            essere pescata.<br />
+            3.<strong>Partita e numero di round</strong>: Le partite di Briscola
+            non prevedono un numero prestabilito di round. Solitamente, le
+            partite si giocano a 1, 3 o 5 round. Vince la partita chi si
+            aggiudica il maggior numero di round tra quelli previsti.<br />
+            4.<strong>Svolgimento delle mani</strong>: Inizia il giocatore
+            seduto alla destra di colui che ha distribuito le carte, e si
+            procede poi in senso antiorario. Ogni giocatore cercherà di
+            aggiudicarsi la mano giocando la carta che ritiene più opportuna al
+            fine di totalizzare il maggior numero di punti. Nella Briscola a 4
+            giocatori, i punti vengono sommati tra i giocatori della stessa
+            squadra. Colui che si aggiudica la mano inizierà il gioco nella mano
+            successiva. <br />5.<strong
+              >Criteri per aggiudicarsi una mano</strong
+            >: <br />- Il primo giocatore a giocare una carta (detto giocatore
+            di mano) determina con la stessa il seme di mano.<br />
+            - I giocatori successivi non hanno alcun obbligo di giocare un
+            particolare seme come invece avviene per giochi come il
+            tressette.<br />
+            - La mano è temporaneamente aggiudicata da un altro giocatore se
+            questi posa sul tavolo una carta del seme di mano con valore di
+            presa maggiore, o una carta del seme di Briscola anche se con valore
+            di presa inferiore.<br />
+            - Alla fine, quando tutti i giocatori avranno posato una carta sul
+            tavolo, si aggiudicherà la mano colui che ha posato la carta di
+            Briscola con valore di presa maggiore, o, in mancanza, da colui che
+            ha giocato la carta del seme di mano con valore di presa maggiore;
+            in mancanza di carte del seme di Briscola o di carte del seme di
+            mano, vince il primo giocatore di mano in quanto l'unico ad aver
+            posato una carta del seme di mano. Essendo il seme di mano
+            determinato di volta in volta dalla prima carta giocata, può
+            coincidere col seme di Briscola ed in questo caso la mano è
+            aggiudicata da chi gioca il seme di Briscola con valore di presa
+            maggiore.<br />
+            Buon divertimento con la Briscola! 🃏
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div
       class="modal fade"
       id="listutenti"
