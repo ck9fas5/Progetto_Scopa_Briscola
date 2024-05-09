@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const socket = require("socket.io");
 const { user } = require("./conf.js");
 const { start } = require("repl");
+const { setDefaultResultOrder } = require("dns");
 
 let users_socket = [];
 let games = [];
@@ -39,7 +40,7 @@ app.use("/", express.static(path.join(__dirname, "public")));
 
 const server = http.createServer(app);
 server.listen(3000, () => {
-  console.log("- server running");
+  //console.log("- server running");
 });
 const io = new socket.Server(server);
 
@@ -47,7 +48,7 @@ db.createTable();
 
 app.post("/login", async (req, res) => {
   let user = await db.checkLogin(req.body.username, req.body.password);
-  //console.log(user);
+  ////console.log(user);
   if (user) {
     res.json({ result: "ok" });
   } else {
@@ -58,7 +59,7 @@ app.post("/login", async (req, res) => {
 app.post("/singin", async (req, res) => {
   let user = await db.getting("User");
   JSON.stringify(user);
-  /*console.log(
+  /*//console.log(
     user.filter(
       (x) =>
         x.username === req.body.username && x.password === req.body.password,
@@ -70,7 +71,7 @@ app.post("/singin", async (req, res) => {
         x.username === req.body.username && x.password === req.body.password,
     ).length === 0
   ) {
-    //console.log("d");
+    ////console.log("d");
     let s = db.insert("User", {
       username: req.body.username,
       password: req.body.password,
@@ -78,7 +79,7 @@ app.post("/singin", async (req, res) => {
     });
     res.json({ result: "ok" });
   } else {
-    //console.log("w");
+    ////console.log("w");
     res.json({ result: "unauthorized" });
   }
 });
@@ -90,14 +91,14 @@ app.get("/card_get", async (req, res) => {
 
 app.get("/user_get", async (req, res) => {
   let users = await GetUser("User");
-  console.log(users);
+  //console.log(users);
   let userss = users_socket.map((us) => {
     return {
       username: users.find((u) => u.id === us.user).username,
       id_user: us.user,
     };
   });
-  //console.log(users);
+  ////console.log(users);
   res.json({ users: userss });
 });
 
@@ -105,8 +106,8 @@ app.get("/game_get", async (req, res) => {
   if (users_socket.length !== 0) {
     let partite = await GetPartite("Game");
     let users = await db.getting("User");
-    /*console.log(partite);*/
-    /*console.log(users);*/
+    /*//console.log(partite);*/
+    /*//console.log(users);*/
     let list_games = [];
     partite.forEach((gm, indi) => {
       let game = games.find((g) => g.room === gm.id);
@@ -123,23 +124,26 @@ app.get("/game_get", async (req, res) => {
         list_games.push({ game: game, users: user });
       }
     });
-    console.log(list_games);
+    //console.log(list_games);
     res.json({ games: list_games });
   }
 });
 
 io.on("connection", (socket) => {
-  console.log("new user");
+  //console.log("new user");
 
   socket.on("accesso", async (password, username) => {
     let users = await GetUser("User");
-    console.log(users, password, username);
+    //console.log(users, password, username);
     let user = users.find(
       (u) => u.password === password && u.username === username,
     );
-    //console.log(user_);
-    users_socket.push({ user: user.id, socket_id: socket.id });
-    console.log(users_socket);
+    ////console.log(user_);
+    if (user !== undefined) {
+      users_socket.push({ user: user.id, socket_id: socket.id });
+      console.log(users_socket);
+      console.log("/n")
+    }
   });
 
   socket.on("join games", (game) => {
@@ -150,9 +154,9 @@ io.on("connection", (socket) => {
     } else {
       let room = games.find((g) => g.room === game);
       list_users = room.users;
-      console.log(list_users);
+      ////console.log(list_users);
       list_users.push(socket.id);
-      //console.log(games.indexOf(room));
+      ////console.log(games.indexOf(room));
       games[games.indexOf(room)]["users"] = list_users;
       list_user2 = list_users.slice(0); //creo lista utenti senza il cretore della stanza perchè solo lui può iniziare la partita
       socket.broadcast
@@ -160,28 +164,30 @@ io.on("connection", (socket) => {
         .emit("join user", list_user2.splice(0, 1));
     }
     console.log(games);
-    console.log("");
+    console.log("/n")
   });
 
   socket.on("invite user", (utente) => {
-    //console.log(utente);
+    ////console.log(utente);
     let senter_user = users_socket.find((us) => us.socket_id === socket.id);
     let invited_user = users_socket.find((us) => us.user === utente);
-    console.log(invited_user);
-    console.log("");
+    //console.log(invited_user);
+    //console.log("");
     let room = games.find((g) => g.users.includes(senter_user.socket_id));
-    console.log(room.room);
-    socket.broadcast
-      .to(invited_user.socket_id)
-      .emit("invited", { username: senter_user.user, room: room.room });
-    console.log("");
+    if (room !== undefined) {
+      //console.log(room.room);
+      socket.broadcast
+        .to(invited_user.socket_id)
+        .emit("invited", { username: senter_user.user, room: room.room });
+      console.log("/n")
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected");
-    console.log(users_socket.find((us) => us.socket_id === socket.id));
+    //console.log("user disconnected");
+    //console.log(users_socket.find((us) => us.socket_id === socket.id));
     if (users_socket.find((us) => us.socket_id === socket.id) !== undefined) {
-      console.log(users_socket[0].socket_id);
+      //console.log(users_socket[0].socket_id);
       users_socket.splice(
         users_socket.indexOf(
           users_socket.find((us) => us.socket_id === socket.id),
@@ -189,58 +195,60 @@ io.on("connection", (socket) => {
         1,
       );
     }
-    console.log(users_socket);
-    console.log("");
+    //console.log(users_socket);
+    console.log("/n")
   });
 
   socket.on("start game briscola", async (game) => {
     let room = games.find((g) => g.room === game);
     games[games.indexOf(room)]["state"] = true;
-    sg = await SetUpGame(room);
+    sg = await SetUpGameBriscola(room);
     started_games.push(sg);
     sg.order.forEach((u, indi) => {
+      ////console.log(u);
       let hands = sg.deck.slice(0, 3);
       sg.deck.splice(0, 3);
-      if (indi === 0) {
-        io.to(u).emit("star", {
-          hand: hands,
-          briscola: sg.briscola,
-          order: sg.order,
-        }); //evento che lato client setapera il terreno di gioco
-        io.to(u).emit("start turn briscola");
-      } else {
-        io.to(u).emit("star", {
-          hand: hands,
-          briscola: sg.briscola,
-          order: sg.order,
-        });
-      }
+      io.to(u).emit("star", {
+        hand: hands,
+        briscola: sg.briscola,
+        order: sg.order,
+      });
     });
+    io.to(sg.order[0]).emit("start_turn_briscola");
     console.log(started_games);
-    console.log(games);
-    console.log("");
+    //console.log(games);
+    console.log("/n")
   });
 
   socket.on("end turn briscola", (game) => {
     let sg = started_games.find((s) => s.room.room === game.room);
-    /*console.log(
+    /*//console.log(
       started_games.find((s) => s.room.room === game.room) !== undefined,
     );*/
     sg.playedcard[sg.playedcard.length - 1].push(game.card);
     sg.index += 1;
     if (sg.deck.length === 0) {
       //controllo sbagliato per il fine partita
-      console.log("fine partita");
+      //console.log("fine partita");
       sg.playedcard.forEach((pc) => {
-        console.log(pc);
+        //console.log(pc);
       });
       let punteggio = punteggi_briscola(playedcard, order);
-      console.log(sg.deck);
-    } else if (sg.index === sg.order.length) {
+      //console.log(sg.deck);
+    }
+    else if (sg.index === sg.order.length) {
       //controllo se è finita la mano
       sg.index = 0;
-      playedcard = sg.playedcard[sg.playedcard.length - 1];
-      calcolo_ordine();
+      let index_order = SetOrder(sg);
+      console.log(index_order);
+      //console.log(sg.order);
+      for (let i = 0; i < index_order; i++) {
+        let posi = sg.order[0];
+        sg.order.splice(0, 1);
+        sg.order.push(posi);
+      }
+      console.log(sg.order);
+
       sg.playedcard.push([]);
 
       //funzione che capisce a chi va la mano
@@ -249,20 +257,19 @@ io.on("connection", (socket) => {
         sg.deck.splice(0, 1);
         io.to(u).emit("draw card", { card: card[0], game: sg });
         if (indi === sg.index) {
-          io.to(u).emit("start turn briscola");
+          io.to(u).emit("start_turn_briscola");
         }
       });
-      console.log(playedcard);
-      console.log(started_games);
+      //console.log(started_games);
     } else {
       //passaggio tutno al prossimo giocatore
       sg.order.forEach((u, indi) => {
         if (indi === sg.index) {
-          io.to(u).emit("start turn briscola");
+          io.to(u).emit("start_turn_briscola");
         }
       });
     }
-    console.log("");
+    //console.log("");
   });
 });
 
@@ -275,7 +282,9 @@ function shuffleArray(array) {
   }
 } //funzione che randomizza array
 
-async function SetUpGame(room) {
+async function SetUpGameBriscola(room) {
+  let type = "b";
+
   let order = room.users.slice(0);
   shuffleArray(order);
 
@@ -284,12 +293,16 @@ async function SetUpGame(room) {
 
   let briscola = deck[deck.length - 1];
 
+  let taken_card = [];
+
   let index = 0;
 
   let sg = {
+    type: type,
     room: room, //o intera istanza o room.room
     order: order,
     deck: deck,
+    taken_card: taken_card,
     briscola: briscola,
     hands: "", //da capire se serve
     playedcard: [[]],
@@ -297,6 +310,81 @@ async function SetUpGame(room) {
   };
   return sg;
 } //crea oggetto started_game (sg) il quale sarà quello che salvera tutii i dati della partita
+
+function SetOrder(game) {
+  let playedcard = game.playedcard[game.playedcard.length - 1];
+  console.log(playedcard);
+  let card_briscola = playedcard.filter(
+    (card) => card.suit === game.briscola.suit,
+  );
+
+  if (card_briscola.length === 0) {
+    let mometum_briscola = playedcard[0];
+    card_briscola = playedcard.filter(
+      (card) => card.suit === mometum_briscola.suit,
+    );
+    //console.log(card_briscola);
+    if (card_briscola.length === 1) {
+      return 0;
+    } else {
+      if (card_briscola.find((c) => parseInt(c.number) === 1) !== undefined) {
+        let index = playedcard.findIndex(
+          (c) => c.suit === mometum_briscola.suit && parseInt(c.number) == 1,
+        );
+        ////console.log(index);
+        return index;
+      } else if (
+        card_briscola.find((c) => parseInt(c.number) === 3) !== undefined
+      ) {
+        let index = playedcard.findIndex(
+          (c) => c.suit === mometum_briscola.suit && parseInt(c.number) == 3,
+        );
+        ////console.log(index);
+        return index;
+      } else {
+        let high_card = card_briscola.find(
+          (c) =>
+            parseInt(c.number) ===
+            Math.max(...card_briscola.map((ca) => ca.number)),
+        );
+        ////console.log(high_card);
+        let index = playedcard.findIndex(
+          (c) =>
+            c.suit === high_card.suit && parseInt(c.number) == high_card.number,
+        );
+        ////console.log(index);
+        return index;
+      }
+    }
+  } else {
+    let high_card = card_briscola.find(
+      (c) =>
+        parseInt(c.number) ===
+        Math.max(...card_briscola.map((ca) => ca.number)),
+    );
+    //console.log(high_card);
+    let index = playedcard.findIndex(
+      (c) => c.suit === high_card.suit && c.number == high_card.number,
+    );
+    ////console.log(index);
+    return index;
+  }
+}
+
+/*//console.log(
+  SetOrder({
+    playedcard: [
+      [
+        
+        { suit: "Denari", number: "1" },
+        { suit: "Coppe", number: "7" },
+        { suit: "Denari", number: "3" },
+        { suit: "Coppe", number: "8" },
+      ],
+    ],
+    briscola: { suit: "Spade", number: "2" },
+  }),
+); //se c'è una briscola funziona*/
 
 let punti_briscola = [
   { valore: 1, punteggio: 11 },
@@ -410,77 +498,6 @@ function punteggi_scopa(carte, ordine) {
   return punteggi;
 }
 
-function calcolo_ordine(carte, briscola) {}
-
 /*
-let prova_deck = [
-  { seme: "Spade", valore: "1", path: "Progetto/assets/card/assoSpade.png" },
-  { seme: "Spade", valore: "2", path: "Progetto/assets/card/dueSpade.png" },
-  { seme: "Spade", valore: "3", path: "Progetto/assets/card/treSpade.png" },
-  { seme: "Spade", valore: "4", path: "Progetto/assets/card/quattroSpade.png" },
-  { seme: "Spade", valore: "5", path: "Progetto/assets/card/cinqueSpade.png" },
-  { seme: "Spade", valore: "6", path: "Progetto/assets/card/assoSpade.png" },
-  { seme: "Spade", valore: "7", path: "Progetto/assets/card/setteSpade.png" },
-  { seme: "Spade", valore: "8", path: "Progetto/assets/card/dSpade.png" },
-  { seme: "Spade", valore: "9", path: "Progetto/assets/card/cSpade.png" },
-  { seme: "Spade", valore: "10", path: "Progetto/assets/card/rSpade.png" },
-  // Aggiungi altre carte di Cuori...
-  { seme: "Denari", valore: "1", path: "Progetto/assets/card/assoDenari.png" },
-  { seme: "Denari", valore: "2", path: "Progetto/assets/card/dueDenari.png" },
-  { seme: "Denari", valore: "3", path: "Progetto/assets/card/treDenari.png" },
-  {
-    seme: "Denari",
-    valore: "4",
-    path: "Progetto/assets/card/quattroDenari.png",
-  },
-  {
-    seme: "Denari",
-    valore: "5",
-    path: "Progetto/assets/card/cinqueDenari.png",
-  },
-  { seme: "Denari", valore: "6", path: "Progetto/assets/card/seiDenari.png" },
-  { seme: "Denari", valore: "7", path: "Progetto/assets/card/setteDenari.png" },
-  { seme: "Denari", valore: "8", path: "Progetto/assets/card/dDenari.png" },
-  { seme: "Denari", valore: "9", path: "Progetto/assets/card/cDenari.png" },
-  { seme: "Denari", valore: "10", path: "Progetto/assets/card/rDenari.png" },
-  // Aggiungi altre carte di Quadri...
-  { seme: "Coppe", valore: "1", path: "Progetto/assets/card/assoCoppe.png" },
-  { seme: "Coppe", valore: "2", path: "Progetto/assets/card/dueCoppe.png" },
-  { seme: "Coppe", valore: "3", path: "Progetto/assets/card/treCoppe.png" },
-  { seme: "Coppe", valore: "4", path: "Progetto/assets/card/quattroCoppe.png" },
-  { seme: "Coppe", valore: "5", path: "Progetto/assets/card/cinqueCoppe.png" },
-  { seme: "Coppe", valore: "6", path: "Progetto/assets/card/seiCoppe.png" },
-  { seme: "Coppe", valore: "7", path: "Progetto/assets/card/setteCoppe.png" },
-  { seme: "Coppe", valore: "8", path: "Progetto/assets/card/dCoppe.png" },
-  { seme: "Coppe", valore: "9", path: "Progetto/assets/card/cCoppe.png" },
-  { seme: "Coppe", valore: "10", path: "Progetto/assets/card/rCoppe.png" },
-  // Aggiungi altre carte di Fiori...
-  {
-    seme: "Bastoni",
-    valore: "1",
-    path: "Progetto/assets/card/assoBastoni.png",
-  },
-  { seme: "Bastoni", valore: "2", path: "Progetto/assets/card/dueBastoni.png" },
-  { seme: "Bastoni", valore: "3", path: "Progetto/assets/card/treBastoni.png" },
-  {
-    seme: "Bastoni",
-    valore: "4",
-    path: "Progetto/assets/card/quattroBastoni.png",
-  },
-  {
-    seme: "Bastoni",
-    valore: "5",
-    path: "Progetto/assets/card/cinqueBastoni.png",
-  },
-  { seme: "Bastoni", valore: "6", path: "Progetto/assets/card/seiBastoni.png" },
-  {
-    seme: "Bastoni",
-    valore: "7",
-    path: "Progetto/assets/card/setteBastoni.png",
-  },
-  { seme: "Bastoni", valore: "8", path: "Progetto/assets/card/dBastoni.png" },
   { seme: "Bastoni", valore: "9", path: "Progetto/assets/card/cBastoni.png" },
-  { seme: "Bastoni", valore: "10", path: "Progetto/assets/card/rBastoni.png" },
-  // Aggiungi altre carte di Picche...
-]; //mazzo provissorio in attesa di quello vero
 */

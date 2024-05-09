@@ -32,7 +32,7 @@ export const render_utenti = (users) => {
   return html;
 };
 
-export const render_tavolo_scopa = (hand, n, briscola) => {
+export const render_tavolo_scopa = (hand, n, carte_terra) => {
   const link_image = "../assets/card/";
   let list_html = [];
   let html = "";
@@ -43,16 +43,13 @@ export const render_tavolo_scopa = (hand, n, briscola) => {
     html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
   });
   list_html.push(html);
-
-  console.log(briscola);
-  let path = briscola.path.split("/");
-  let src = link_image + path[path.length - 1];
-  list_html.push(
-    `<img src="${src}" class="immagine_ruotata" alt="carta" width="110px" height="155px">`,
-  );
-  list_html.push(
-    `<img src="../assets/card/back.png" class="" alt="carta" width="110px" height="155px">`,
-  ); //p1,briscola,deck
+  html = "";
+  carte_terra.forEach((element) => {
+    let path = element.path.split("/");
+    let src = link_image + path[path.length - 1];
+    html += `<img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px">`;
+  });
+  list_html.push(html);
   if (n.length === 2) {
     list_html.push(
       `<img class="" src="../assets/card/back.png" alt="carta" width="110px" height="155px"><img class="" src="../assets/card/back.png" alt="carta" width="110px" height="155px"><img class=""src="../assets/card/back.png" alt="carta" width="110px" height="155px">`,
@@ -80,7 +77,7 @@ export const render_tavolo = (hand, n, briscola) => {
     let path = element.path.split("/");
     let src = link_image + path[path.length - 1];
     //console.log(src);
-    html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
+    html += `<img src="${src}" alt="carte" class="" width="110px" height="155px">`;
   });
   list_html.push(html);
 
@@ -88,7 +85,7 @@ export const render_tavolo = (hand, n, briscola) => {
   let path = briscola.path.split("/");
   let src = link_image + path[path.length - 1];
   list_html.push(
-    `<img src="${src}" class="immagine_ruotata" alt="carta" width="110px" height="155px">`,
+    `<img src="${src}" class="" alt="carta" width="110px" height="155px">`,
   );
   list_html.push(
     `<img src="../assets/card/back.png" class="" alt="carta" width="110px" height="155px">`,
@@ -112,7 +109,7 @@ export const render_tavolo = (hand, n, briscola) => {
   return list_html;
 };
 
-export const render_paritite = (partite) => {
+export const render_partite = (partite) => {
   const template_partite = `<tr>
                               <td colspan="3">#ID</td>
                               <td colspan="3">#USERNAME</td>
