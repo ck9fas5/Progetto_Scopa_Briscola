@@ -1,4 +1,5 @@
 //in questo file sono presenti tutte le render
+const link_image = "../assets/card/";
 
 export const render_alert = (invite, username) => {
   if (username !== "") {
@@ -32,6 +33,25 @@ export const render_utenti = (users) => {
   return html;
 };
 
+export const render_partite = (partite) => {
+  const template_partite = `<tr>
+                              <td colspan="3">#ID</td>
+                              <td colspan="3">#USERNAME</td>
+                              <td><button class="btn btn-info invite" value="#ID" type="button" data-bs-dismiss="modal">Assisti</button></td>
+                            </tr>`;
+  let html = "";
+  partite.forEach((p) => {
+    let text_user = "";
+    p.users.forEach((u) => {
+      text_user += u + ", ";
+    });
+    html += template_partite
+      .replaceAll("#ID", p.game.room)
+      .replace("#USERNAME", text_user);
+  });
+  return html;
+};
+
 export const render_tavolo_scopa = (hand, n, carte_terra) => {
   const link_image = "../assets/card/";
   let list_html = [];
@@ -42,6 +62,7 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
     //console.log(src);
     html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
   });
+  html += `<button class="button btn-outline droppa" type="button">Tira</button> `;
   list_html.push(html);
   html = "";
   carte_terra.forEach((element) => {
@@ -69,17 +90,8 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
   return list_html;
 };
 
-export const render_tavolo = (hand, n, briscola) => {
-  const link_image = "../assets/card/";
+export const render_tavolo = (n, briscola) => {
   let list_html = [];
-  let html = "";
-  hand.forEach((element) => {
-    let path = element.path.split("/");
-    let src = link_image + path[path.length - 1];
-    //console.log(src);
-    html += `<img src="${src}" alt="carte" class="" width="110px" height="155px">`;
-  });
-  list_html.push(html);
 
   console.log(briscola);
   let path = briscola.path.split("/");
@@ -89,7 +101,7 @@ export const render_tavolo = (hand, n, briscola) => {
   );
   list_html.push(
     `<img src="../assets/card/back.png" class="" alt="carta" width="110px" height="155px">`,
-  ); //p1,briscola,deck
+  ); //briscola,deck
   if (n.length === 2) {
     list_html.push(
       `<img class="" src="../assets/card/back.png" alt="carta" width="110px" height="155px"><img class="" src="../assets/card/back.png" alt="carta" width="110px" height="155px"><img class=""src="../assets/card/back.png" alt="carta" width="110px" height="155px">`,
@@ -109,21 +121,29 @@ export const render_tavolo = (hand, n, briscola) => {
   return list_html;
 };
 
-export const render_partite = (partite) => {
-  const template_partite = `<tr>
-                              <td colspan="3">#ID</td>
-                              <td colspan="3">#USERNAME</td>
-                              <td><button class="btn btn-info invite" value="#ID" type="button" data-bs-dismiss="modal">Assisti</button></td>
-                            </tr>`;
+export const render_playerCard = (hand) => {
   let html = "";
-  partite.forEach((p) => {
-    let text_user = "";
-    p.users.forEach((u) => {
-      text_user += u + ", ";
-    });
-    html += template_partite
-      .replaceAll("#ID", p.game.room)
-      .replace("#USERNAME", text_user);
+  hand.forEach((element) => {
+    let path = element.path.split("/");
+    let src = link_image + path[path.length - 1];
+    //console.log(src);
+    html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
+  });
+  return html;
+};
+
+export const render_turno = (decks) => {
+  let html = "";
+  return html;
+};
+
+export const render_board = (cards) => {
+  let html = "";
+  cards.forEach((element) => {
+    let path = element.path.split("/");
+    let src = link_image + path[path.length - 1];
+    //console.log(src);
+    html += `<img src="${src}" alt="carte" class="" width="110px" height="155px">`;
   });
   return html;
 };

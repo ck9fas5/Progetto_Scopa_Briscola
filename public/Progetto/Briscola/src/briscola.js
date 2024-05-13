@@ -4,8 +4,11 @@ import { getUsers, GetPartite, getCard } from "../../src/connection.js";
 import {
   render_alert,
   render_utenti,
-  render_tavolo,
   render_partite,
+  render_tavolo,
+  render_playerCard,
+  render_turno,
+  render_board,
 } from "../../src/render.js";
 
 const div_prepartita = document.getElementById("pre-game");
@@ -25,13 +28,12 @@ const giocatore2 = document.getElementById("giocatore2");
 const giocatore3 = document.getElementById("giocatore3");
 const giocatore4 = document.getElementById("giocatore4");
 const div_briscola = document.getElementById("briscola");
+const played_card = document.getElementById("played_card");
 const deck = document.getElementById("deck");
 const b_passturn = document.getElementById("passturn");
 
-let briscola;
 let socket;
 let users;
-const link_image = "../assets/card/";
 let hand;
 let room = "";
 
@@ -73,8 +75,7 @@ socket.on("join user", (list_user) => {
 
 socket.on("draw card", async (data) => {
   hand.push(data.card);
-  let users = data.game.order;
-  tavolo(hand, users, briscola);
+  giocatore1.innerHTML = render_playerCard(hand);
 });
 
 socket.on("star", async (istance) => {
@@ -87,13 +88,19 @@ socket.on("star", async (istance) => {
   alert_invite.classList.remove("show");
   alert_invite.classList.add("d-none");
   console.log(istance);
-  briscola = istance.briscola;
+  let briscola = istance.briscola;
   hand = istance.hand;
-  users = istance.order;
+  let users = istance.order;
   tavolo(hand, users, briscola);
 });
 
+socket.on("updateboard", (cards) => {
+  let html = render_board(cards);
+  played_card.innerHTML = html;
+});
+
 socket.on("start_turn_briscola", () => {
+  //updte gio giocatore
   console.log("dio");
   click_carte();
 });
@@ -182,7 +189,8 @@ tavolo_button.onclick = () => {
 
 function tavolo(hand, users, briscola) {
   console.log(users);
-  let htmls = render_tavolo(hand, users, briscola);
+  let user_card = render_playerCard(hand);
+  let htmls = render_tavolo(users, briscola);
   console.log(htmls);
   if (htmls.length === 1) {
     if (htmls[0].text !== "ok") {
@@ -193,18 +201,15 @@ function tavolo(hand, users, briscola) {
       div_game.classList.add("d-none");
       alert_invite.innerHTML = risposta.text;
     }
-  } else if (htmls.length === 4) {
-    //console.log(htmls[0]);
-    giocatore1.innerHTML = htmls[0];
-    div_briscola.innerHTML = htmls[1];
-    deck.innerHTML = htmls[2];
-    giocatore2.innerHTML = htmls[3];
-  } else if (htmls.length === 6) {
-    giocatore1.innerHTML = htmls[0];
-    div_briscola.innerHTML = htmls[1];
-    deck.innerHTML = htmls[2];
-    giocatore3.innerHTML = htmls[4];
-    giocatore4.innerHTML = htmls[5];
+  } else {
+    giocatore1.innerHTML = user_card;
+    div_briscola.innerHTML = htmls[0];
+    deck.innerHTML = htmls[1];
+    giocatore2.innerHTML = htmls[2];
+    if (htmls.length === 5) {
+      giocatore3.innerHTML = htmls[3];
+      giocatore4.innerHTML = htmls[4];
+    }
   }
 }
 
@@ -224,8 +229,13 @@ function click_carte() {
         hand.findIndex((c) => c.suit === card.suit && c.number === card.number),
         1,
       );
-      socket.emit("end turn briscola", { room: room, card: card });
-      tavolo(hand, users, briscola);
+      socket.emit("update board", { room: room, card: card });
+      giocatore1.innerHTML = render_playerCard(hand);
+      setTimeout(() => {
+        socket.emit("end turn briscola", { room: room, card: card });
+      }, 2000);
+
+      //giocatore
       console.log("carta giocata", src);
     });
   });

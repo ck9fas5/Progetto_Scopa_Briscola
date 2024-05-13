@@ -124,7 +124,7 @@ body{
 }
 
 .player_card1{
-  background-color:red;
+  /*background-color:red;*/
   display:flex;
   flex-direction:row;
   justify-content:space-between;
@@ -138,7 +138,7 @@ body{
   height:25%*/
 }
 .player_card2{
-  background-color:#906464;
+  /*background-color:#906464;*/
   display:flex;
   flex-direction:row;
   justify-content:space-between;
@@ -152,7 +152,7 @@ body{
   height:25%*/
 }
 .player_card3{
-  background-color:#0011ff;
+  /*background-color:#0011ff;*/
   display:flex;
   flex-direction:column;
   padding-left:10%;
@@ -165,7 +165,7 @@ body{
   transform:rotate(90deg)*/
 }
 .player_card4{
-  background-color:#18f708;
+  /*background-color:#18f708;*/
   display:flex;
   flex-direction:column;
   
@@ -183,7 +183,7 @@ body{
 background-color: #47cd47;}
 
 .played{
-  background-color:#000000;
+  /*background-color:#000000;*/
   position: absolute;
   top:30%;
   left:70%;
@@ -191,7 +191,7 @@ background-color: #47cd47;}
   height:45%
 }
 .briscola{
-  background-color:#ffa200;
+  /*background-color:#ffa200;*/
   position: absolute;
   top:30%;
   left:57%;
@@ -199,7 +199,7 @@ background-color: #47cd47;}
   height:45%;
 }
 .deck{
-  background-color:#f708d7;
+  /*background-color:#f708d7;*/
   position: absolute;
   top:30%;
   left:10%;
@@ -219,12 +219,17 @@ background-color: #47cd47;}
   transform:scale(1.1);
 }
 
-.rotazione @keyframes tilt-shaking {
+@keyframes tilt-shaking {
   0% { transform: rotate(0deg); }
   25% { transform: rotate(5deg); }
   50% { transform: rotate(0eg); }
   75% { transform: rotate(-5deg); }
   100% { transform: rotate(0deg); }
+}
+
+.shake{
+  animation-name: tilt-shaking;
+  animation-duration: 3s;
 }
 
 .hover{

@@ -23,6 +23,7 @@ const deck = document.getElementById("deck");
 
 const link_image = "../assets/card/";
 let hand;
+let carte_terra;
 let room = "";
 let users = [
   { id: 1, username: "vale", password: "vale", status: 1 },
@@ -66,7 +67,6 @@ socket.on("draw card", (card) => {
 
 function tavolo(hand, users, carte_terra) {
   let htmls = render_tavolo_scopa(hand, users, carte_terra);
-  console.log(htmls);
   if (htmls.length === 1) {
     if (htmls[0].text !== "ok") {
       alert_invite.classList.remove("d-none");
@@ -89,100 +89,117 @@ function tavolo(hand, users, carte_terra) {
   }
 }
 
-async function click_carte(hand, carte_terra) {
+function calcola_path(elemento) {
+  let path = elemento.src.split("/");
+  return "Progetto/assets/card/" + path[path.length - 1];
+}
+
+function da_carte_a_terra_a_hand(lista_carte, carta) {
+  let c = calcola_path(carta);
+  let elemento = "";
+  lista_carte.forEach((element) => {
+    if (element.path === c) {
+      elemento = element;
+    }
+  });
+  return elemento;
+}
+
+function fine_turno(
+  hand,
+  carte_prese,
+  carte_terra,
+  carta_selezionata,
+  carta,
+  t,
+) {
+  if (t == "prese") {
+    carte_prese.forEach((el) => {
+      let index = carte_terra.indexOf(
+        carte_terra.find(
+          (carte) => carte.number === el.number && carte.suit === el.suit,
+        ),
+      );
+      carte_terra.splice(index, 1);
+    });
+  } else if (t == "drop") {
+    carte_terra.push(carta_selezionata);
+  }
+  let car;
+  let c = calcola_path(carta);
+  hand.forEach((carta, i) => {
+    if (carta.path === c) {
+      carte_prese.push(carta);
+      car = i;
+    }
+  });
+  hand.splice(car, 1);
+
+  socket.emit("end turn scopa", {
+    room: room,
+    card: carte_terra,
+    carte_prese: carte_prese,
+  });
+
+  tavolo(hand, users, carte_terra);
+  click_carte();
+}
+
+async function click_carte() {
   const carte_giocatore = document.querySelectorAll(".carte_giocatore");
   const carte_a_terra = document.querySelectorAll(".carte_terra");
-  console.log(carte_a_terra);
   let carte_prese = [];
+  let drop = document.querySelector(".droppa");
   carte_giocatore.forEach((carta) => {
     carta.addEventListener("click", () => {
       carta.classList.add("hover");
-
-      carte_terra.forEach((card) => {
-        let c = hand.filter((ca) => carta.number == card.number);
-        console.log(c);
-        if (c.length > 0) {
-          c.forEach((element) => {
-            let index = carte_terra.indexOf(
-              carte_terra.find(
-                (carte) =>
-                  carte.number === element.number &&
-                  carte.suit === element.suit,
-              ),
+      let carta_selezionata = da_carte_a_terra_a_hand(hand, carta);
+      console.log(carta_selezionata);
+      carte_a_terra.forEach((element) => {
+        element.addEventListener("click", () => {
+          element.classList.add("hover");
+          console.log(da_carte_a_terra_a_hand(carte_terra, element));
+          carte_prese.push(da_carte_a_terra_a_hand(carte_terra, element));
+          console.log(carte_prese);
+          let somma = 0;
+          carte_prese.forEach((element) => {
+            somma += element.number;
+          });
+          if (somma === carta_selezionata.number) {
+            fine_turno(
+              hand,
+              carte_prese,
+              carte_terra,
+              carta_selezionata, //da ,mettere l'elemento di carte_prese
+              carta,
+              "prese",
             );
-            console.log(index);
-            carte_a_terra[index].classList.add("hover");
-            carte_a_terra[index].addEventListener("click", () => {
-              carte_prese.push(element);
-              carte_terra.splice(index, 1);
-              let path = carta.src.split("/");
-              let src = link_image + path[path.length - 1];
-              let c = "Progetto/assets/card/" + path[path.length - 1];
-              let car;
-              hand.forEach((carta, i) => {
-                if (carta.path === c) {
-                  car = i;
-                }
-              });
-              hand.splice(car, 1);
-              console.log(carte_terra);
-              //socket.emit("end turn scopa", { room: room, card: src });
-              console.log("carta giocata", src);
-              tavolo(hand, users, carte_terra);
-              click_carte(hand, carte_terra);
-            });
-          });
-        } else {
-          carte_a_terra.forEach((element) => {
-            element.addEventListener("click", () => {
-              element.classList.add("hover");
-              let path = element.src.split("/");
-              let src = "Progetto/assets/card/" + path[path.length - 1];
-              carte_prese.push(carte_terra.find((carte) => carte.path === src));
-              console.log(carte_prese);
-              if (
-                carte_prese.reduce((acc, curr) => acc + curr) === carta.number
-              ) {
-                carte_prese.forEach((element) => {
-                  let index = carte_terra.indexOf(
-                    carte_terra.find(
-                      (carte) =>
-                        carte.number === element.number &&
-                        carte.suit === element.suit,
-                    ),
-                  );
-                  carte_terra.splice(index, 1);
-                });
-                let path = carta.src.split("/");
-                let src = link_image + path[path.length - 1];
-                let c = "Progetto/assets/card/" + path[path.length - 1];
-                let car;
-                hand.forEach((carta, i) => {
-                  if (carta.path === c) {
-                    car = i;
-                  }
-                });
-                hand.splice(car, 1);
-                console.log(carte_terra);
-                //socket.emit("end turn scopa", { room: room, card: src });
-                console.log("carta giocata", src);
-                tavolo(hand, users, carte_terra);
-                click_carte(hand, carte_terra);
-              } else {
-                element.classList.remove("hover");
-                element.classList.add("rotazione");
-                console.log("dd")
-              }
-            });
-          });
-        }
+          } else if (somma > carta_selezionata.number) {
+            element.classList.add("shake");
+            element.classList.remove("hover");
+          }
+        });
+        drop.onclick = () => {
+          let somme_possibili = somme(carta_selezionata, carte_terra);
+          if (somme_possibili.length > 0) {
+            //forEach e poi far ingrandire le carte che potrebbe prendere
+          } else {
+            fine_turno(
+              hand,
+              carte_prese,
+              carte_terra,
+              carta_selezionata,
+              carta,
+              "drop",
+            );
+          }
+        };
       });
     });
-    console.log(carte_prese);
   });
 }
 
-socket.on("star", (istance) => {
+socket.on("start scopa", (istance) => {
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
   div_prepartita.classList.add("d-none");
@@ -191,23 +208,14 @@ socket.on("star", (istance) => {
   alert_invite.classList.remove("show");
   alert_invite.classList.add("d-none");
   console.log(istance);
-  briscola = istance.briscola;
   hand = istance.hand;
-  let users = istance.order;
+  carte_terra = istance.carte_terra;
+  users = istance.order;
   tavolo(hand, users, carte_terra);
-  click_carte(hand, carte_terra);
 });
 
-socket.on("start turn", () => {
-  b_passturn.classList.remove("d-none");
-  b_passturn.onclick = () => {
-    console.log(hand);
-    let pcard = hand[Math.floor(Math.random() * hand.length)];
-    hand.splice(hand.indexOf(pcard), 1);
-    b_passturn.classList.add("d-none");
-    socket.emit("end turn", { room: room, card: pcard });
-  };
-  //console.log(hand);
+socket.on("start turn scopa", () => {
+  click_carte();
 });
 
 document.getElementById("utenti_connessi").onclick = () => {
@@ -245,9 +253,9 @@ button_tavolo.onclick = () => {
     },
     {
       id: 3,
-      number: 2,
+      number: 4,
       suit: "Spade",
-      path: "Progetto/assets/card/dueSpade.png",
+      path: "Progetto/assets/card/quattroSpade.png",
     },
     {
       id: 4,
@@ -266,8 +274,8 @@ button_tavolo.onclick = () => {
     {
       id: 37,
       number: 6,
-      suit: "Bastoni",
-      path: "Progetto/assets/card/seiBastoni.png",
+      suit: "Denari",
+      path: "Progetto/assets/card/seiDenari.png",
     },
     {
       id: 38,
@@ -283,5 +291,5 @@ button_tavolo.onclick = () => {
     },
   ];
   tavolo(h, users, carte_terra);
-  click_carte(h, carte_terra);
+  click_carte();
 };
