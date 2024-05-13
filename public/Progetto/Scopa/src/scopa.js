@@ -1,19 +1,23 @@
 //in questo file è presente il codice di scopa
-import { getUsers } from "../../src/connection.js";
+import { getUsers, GetPartite, getCard } from "../../src/connection.js";
 import {
   render_utenti,
   render_alert,
   render_partite,
   render_tavolo_scopa,
 } from "../../src/render.js";
+
 const div_prepartita = document.getElementById("pre-game");
-const div_game = document.getElementById("game");
-const div_prova = document.getElementById("div_utenti");
+const b_listutenti = document.getElementById("utenti_connessi");
+const b_createRoom = document.getElementById("createroom");
+const n_listpartite = document.getElementById("partite_in_corso");
 const alert_invite = document.getElementById("alert_invite");
-const b_startgame = document.getElementById("startgame");
-const b_passturn = document.getElementById("passturn");
+const partitemodal = document.getElementById("partitemodal");
+const bodymodal = document.getElementById("bodymodal");
 const logout = document.getElementById("logout");
 const button_tavolo = document.getElementById("tavolo");
+const div_game = document.getElementById("game");
+const b_startgame = document.getElementById("startgame");
 
 const giocatore1 = document.getElementById("giocatore_principale");
 const giocatore2 = document.getElementById("giocatore2");
@@ -25,20 +29,23 @@ const link_image = "../assets/card/";
 let hand;
 let carte_terra;
 let room = "";
-let users = [
-  { id: 1, username: "vale", password: "vale", status: 1 },
-  { id: 28, username: "Ck9fas5", password: "12345", status: 1 },
-];
+let users = [];
 
-const socket = io();
-if (
-  Cookies.get("username") == undefined &&
-  Cookies.get("password") == undefined
-) {
-  location.href = "/Progetto/login.html";
-}
-
-socket.emit("accesso", Cookies.get("password"), Cookies.get("username"));
+let socket = io();
+(async function () {
+  if (
+    Cookies.get("username") == undefined &&
+    Cookies.get("password") == undefined
+  ) {
+    location.href = "/Progetto/login.html";
+  } else {
+    socket = io();
+    socket.emit("accesso", Cookies.get("password"), Cookies.get("username"));
+    let list_card = await getCard();
+    console.log(list_card);
+    let path = list_card.card[0].path.split("/");
+  }
+})();
 
 socket.on("invited", (utente) => {
   console.log(utente);
@@ -56,7 +63,7 @@ socket.on("join user", (list_user) => {
   b_startgame.disabled = false;
   b_startgame.classList.remove("d-none");
   b_startgame.onclick = () => {
-    socket.emit("start game", room);
+    socket.emit("start game scopa", room);
   };
   console.log(list_user);
 });
@@ -218,12 +225,37 @@ socket.on("start turn scopa", () => {
   click_carte();
 });
 
-document.getElementById("utenti_connessi").onclick = () => {
-  render_utenti();
+b_listutenti.onclick = async () => {
+  let users = await getUsers();
+  console.log(users);
+  bodymodal.innerHTML = render_utenti(users.users);
+  let buttons = document.querySelectorAll(".invite");
+  buttons.forEach((b) => {
+    b.onclick = () => {
+      if (room !== "") {
+        socket.emit("invite user", parseInt(b.value));
+      } else {
+        alert_invite.innerHTML = render_alert("", "");
+        alert_invite.classList.add("show");
+        let myModal = new bootstrap.Modal("#listutenti", {});
+        myModal.hide();
+      }
+    };
+  });
 };
 
-document.getElementById("room").onclick = () => {
-  socket.emit("join games", room);
+n_listpartite.onclick = async () => {
+  let partite = await GetPartite(Cookies.get("username"));
+  console.log(partite.games);
+  partitemodal.innerHTML = render_partite(partite.games);
+};
+
+b_createRoom.onclick = () => {
+  b_createRoom.disabled = true;
+  let hash = CryptoJS.SHA256(socket.id);
+  let hashInHex = hash.toString(CryptoJS.enc.Hex);
+  room = hashInHex;
+  socket.emit("join games", hashInHex);
 };
 
 logout.onclick = () => {

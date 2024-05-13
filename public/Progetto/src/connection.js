@@ -39,8 +39,8 @@ export async function login(username, password) {
   }
 }
 
-export async function getUsers() {
-  let response = await fetch("/user_get", {
+export async function getUsers(user) {
+  let response = await fetch("/user_get/" + user, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

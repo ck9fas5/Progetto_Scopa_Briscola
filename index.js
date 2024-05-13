@@ -30,6 +30,11 @@ const GetCarte = async () => {
   return cards;
 };
 
+const FindUsername = (list_user, id) => {
+  console.log(list_user);
+  return list_user.find((u) => u.id === id).username;
+};
+
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
@@ -90,15 +95,17 @@ app.get("/card_get", async (req, res) => {
   res.json({ card: cards });
 });
 
-app.get("/user_get", async (req, res) => {
+app.get("/user_get/:usernam", async (req, res) => {
+  //console.log(req.params.usernam);
   let users = await GetUser("User");
   ////console.log(users);
   let userss = users_socket.map((us) => {
     return {
-      username: users.find((u) => u.id === us.user).username,
+      username: FindUsername(users, us.user),
       id_user: us.user,
     };
   });
+  userss = userss.filter((us) => us.username !== req.params.usernam);
   //////console.log(users);
   res.json({ users: userss });
 });
@@ -113,6 +120,7 @@ app.get("/game_get", async (req, res) => {
     partite.forEach((gm, indi) => {
       let game = games.find((g) => g.room === gm.id);
       let user = [];
+      console.log(game);
       if (game !== undefined) {
         game.users.forEach((u, indi) => {
           user.push(
@@ -131,7 +139,7 @@ app.get("/game_get", async (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  ////console.log("new user");
+  //gestione accesso utente, invito utente, disconessione utente e unione ad una stanza
   socket.on("accesso", async (password, username) => {
     let users = await GetUser("User");
     ////console.log(users, password, username);
@@ -141,8 +149,8 @@ io.on("connection", (socket) => {
     //////console.log(user_);
     if (user !== undefined) {
       users_socket.push({ user: user.id, socket_id: socket.id });
-      //console.log(users_socket);
-      //console.log("/n");
+      console.log(users_socket);
+      console.log("/n");
     }
   });
 
@@ -167,18 +175,21 @@ io.on("connection", (socket) => {
     //console.log("/n");
   });
 
-  socket.on("invite user", (utente) => {
-    //////console.log(utente);
+  socket.on("invite user", async (utente) => {
+    //console.log(utente);
+    let users = await GetUser("User");
     let senter_user = users_socket.find((us) => us.socket_id === socket.id);
     let invited_user = users_socket.find((us) => us.user === utente);
-    ////console.log(invited_user);
-    ////console.log("");
+    //console.log(invited_user);
+    console.log(senter_user);
+    //console.log("");
     let room = games.find((g) => g.users.includes(senter_user.socket_id));
     if (room !== undefined) {
-      ////console.log(room.room);
-      socket.broadcast
-        .to(invited_user.socket_id)
-        .emit("invited", { username: senter_user.user, room: room.room });
+      //console.log(room.room);
+      socket.broadcast.to(invited_user.socket_id).emit("invited", {
+        username: FindUsername(users, senter_user.user),
+        room: room.room,
+      });
       //console.log("/n");
     }
   });
@@ -199,6 +210,7 @@ io.on("connection", (socket) => {
     //console.log("/n");
   });
 
+  //gesione partita di briscola
   socket.on("start game briscola", async (game) => {
     let room = games.find((g) => g.room === game);
     games[games.indexOf(room)]["state"] = true;
@@ -224,62 +236,14 @@ io.on("connection", (socket) => {
     //console.log("/n");
   });
 
-  socket.on("start game scopa", async (game) => {
-    let room = games.find((g) => g.room === game);
-    games[games.indexOf(room)]["state"] = true;
-    let dati = await SetUpGameScopa(room);
+  socket.on("end turn briscola", async (game) => {
+    let users = await GetUser("User");
+    let sg = started_games.find((s) => s.room === game.room);
+    let sr = started_round.find((s) => s.room === game.room);
     
-    let sg = dati.sg;
-    let sr = dati.sr;
-    started_games.push(sg);
-    started_round.push(sr);
-    //console.log(sg, sr);
-
-    sr.order.forEach((element) => {
-      let hands = sg.deck.slice(0, 3);
-      sg.deck.splice(0, 3);
-      io.to(element).emit("start scopa", {
-        hand: hands,
-        carte_terra: sg.carte_terra,
-        order: sr.order,
-      });
-    });
-    io.to(sr.order[0]).emit("start turn scopa");
-  });
-
-  socket.on("update board", (game) => {
-    let sg = started_games.find((s) => s.room === game.room);
-    let sr = started_round.find((s) => s.room === game.room);
-    sr.card_played.push(game.card);
-    io.to(sg.room).emit("updateboard", sr.card_played);
-  });
-
-  socket.on("end turn scopa", (game) => {
-    let sg = started_games.find((s) => s.room === game.room);
-    let sr = started_round.find((s) => s.room === game.room);
     sr.index += 1;
-    carte_scopa.push(game.carte_prese);
-    let punteggio = punteggi_scopa(game.carte_prese, giocatore);
-    if (game.card.length === 0) {
-      punteggio += 1;
-    }
-  });
-
-  socket.on("end turn briscola", (game) => {
-    let sg = started_games.find((s) => s.room === game.room);
-    let sr = started_round.find((s) => s.room === game.room);
-    sr.index += 1;
-    if (sg.list_turncard.length === 40 / sr.order.length) {
-      sr.order.forEach((u) => {
-        let user = sg.taken_card.find((is) => is.user === u);
-        let punti = punteggi_briscola(user);
-        user["punti"] = punti;
-      });
-      console.log(sg.taken_card);
-      /*
-      let punteggio = punteggi_briscola(playedcard, order);
-      ////console.log(sg.deck);*/
-    } else if (sr.index === sr.order.length) {
+    //console.log(40 / sr.order.length, sg.list_turncard.length);
+    if (sr.index === sr.order.length) {
       //controllo se è finita la mano
       sr.index = 0;
       sg.list_turncard.push(sr.card_played);
@@ -298,18 +262,41 @@ io.on("connection", (socket) => {
       //console.log(sg.taken_card);
 
       sr.card_played = [];
-      //funzione che capisce a chi va la mano
       io.to(sg.room).emit("updateboard", []);
-      sr.order.forEach((u, indi) => {
-        if (sg.deck.length > 0) {
-          let card = sg.deck.slice(0, 1);
-          sg.deck.splice(0, 1);
-          io.to(u).emit("draw card", { card: card[0], game: sg });
-        }
-        if (indi === sr.index) {
-          io.to(u).emit("start_turn_briscola");
-        }
-      });
+
+      if (sg.list_turncard.length === 40 / sr.order.length) {
+        //controllo se è finita la partita
+        sr.order.forEach((u) => {
+          let ista = sg.taken_card.find((is) => is.user === u);
+          let punti = punteggi_briscola(ista);
+          ista["punti"] = punti;
+          console.log(punti);
+          //console.log(user.mazzo);
+        });
+        let punteggi = sg.taken_card.map((is) => {
+          return {
+            username: FindUsername(
+              users,
+              users_socket.find((us) => us.socket_id === is.user).user,
+            ),
+            mazzo: is.mazzo,
+            punti: 0,
+          };
+        });
+        console.log(punteggi);
+        io.to(sg.room).emit("fine partita", punteggi);
+      } else {
+        sr.order.forEach((u, indi) => {
+          if (sg.deck.length > 0) {
+            let card = sg.deck.slice(0, 1);
+            sg.deck.splice(0, 1);
+            io.to(u).emit("draw card", { card: card[0], game: sg });
+          }
+          if (indi === sr.index) {
+            io.to(u).emit("start_turn_briscola");
+          }
+        });
+      }
       console.log(started_games);
       console.log(started_round);
     } else {
@@ -322,6 +309,51 @@ io.on("connection", (socket) => {
       });
     }
     ////console.log("");
+  });
+
+  socket.on("update board", (game) => {
+    let sg = started_games.find((s) => s.room === game.room);
+    let sr = started_round.find((s) => s.room === game.room);
+    sr.card_played.push(game.card);
+    io.to(sg.room).emit("updateboard", sr.card_played);
+  });
+
+  //gestione partita di scopa
+  socket.on("start game scopa", async (game) => {
+    let room = games.find((g) => g.room === game);
+    games[games.indexOf(room)]["state"] = true;
+    let dati = await SetUpGameScopa(room);
+    let sg = dati.sg;
+    started_games.push(sg);
+    //console.log(sg, sr);
+    let carte_terra = sg.deck.slice(0, 4);
+    sg.deck.splice(0, 4);
+    sr.order.forEach((element) => {
+      let hands = sg.deck.slice(0, 3);
+      sg.deck.splice(0, 3);
+      io.to(element).emit("start scopa", {
+        hand: hands,
+        carte_terra: carte_terra,
+        order: sg.order,
+      });
+    });
+    io.to(sg.order[0]).emit("start turn scopa");
+  });
+
+  socket.on("end turn scopa", (game) => {
+    let sg = started_games.find((s) => s.room === game.room);
+    carte_scopa.push(sg.carte_prese);
+    let punteggio = punteggi_scopa(game.carte_prese, sg.order[sg.index]);
+    if (game.card.length === 0) {
+      punteggio.punteggio += 1;
+    }
+    sg.index += 1;
+    if (sg.index === sg.order.length) {
+      sg.index = 0;
+      io.to(sg.order[sg.index]).emit("start turn scopa");
+    } else {
+      io.to(sg.order[sg.index]).emit("start turn scopa");
+    }
   });
 });
 
@@ -337,87 +369,79 @@ function shuffleArray(array) {
 async function SetUpGameBriscola(room) {
   let type = "b";
 
-  let order = room.users.slice(0);
+  let order = room.users.slice(0); //ottiene una lista di socket_id mescolata a caso
   shuffleArray(order);
 
-  let deck = await GetCarte();
+  let deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
   shuffleArray(deck);
 
-  let briscola = deck[deck.length - 1];
+  let briscola = deck[deck.length - 1]; //definisce la briscola
 
-  let taken_card = order.map((p) => ({ user: p, mazzo: [] }));
+  let taken_card = order.map((p) => ({ user: p, mazzo: [] })); //crea i "mazzetti di ogni giocatore"
 
-  let index = 0;
+  let index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn
 
   let sr = {
     room: room.room,
     order: order,
     index: index,
     card_played: [],
-  };
+  }; // crea un oggetto sr (started round) che contiene le proprietà di un rount come ordine e le carte giocate in quel round
 
   let sg = {
     type: type,
-    room: room.room, //o intera istanza o room.room
+    room: room.room,
     deck: deck,
     taken_card: taken_card,
     briscola: briscola,
     list_turncard: [],
-  };
+  }; //crea oggetto started_game (sg), che salvera tutti gli attributi della cartica come briscola e i mazzetti e il mazzo
 
   return { sg: sg, sr: sr };
-} //crea oggetto started_game (sg) il quale sarà quello che salvera tutii i dati della partita
+} //funzione che inizializa le variabili fondamentali per la partita
 
 async function SetUpGameScopa(room) {
   let type = "s";
 
-  let order = room.users.slice(0);
+  let order = room.users.slice(0); //ottiene una lista di socket_id mescolata a caso
   shuffleArray(order);
 
-  let deck = await GetCarte();
+  let deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
   shuffleArray(deck);
 
-  let carte_terra = [];
-
-  let taken_card = order.map((p) => ({ user: p, mazzo: [] }));
-
-  let index = 0;
-
-  let sr = {
-    room: room.room,
-    order: order,
-    index: index,
-    card_played: [],
-  };
+  let index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn
+  let taken_card = order.map((p) => ({ user: p, mazzo: [] })); //crea i "mazzetti di ogni giocatore"
 
   let sg = {
     type: type,
-    room: room.room, //o intera istanza o room.room
+    room: room.room,
     deck: deck,
     taken_card: taken_card,
-    carte_terra: carte_terra,
     list_turncard: [],
-  };
+    order: order,
+    index: index,
+  }; //crea oggetto sg (started games) il quale contiene tutte gli attributo di una partita come
+  // il mazzo, gli utenti, i mazzetti
 
-  return { sg: sg, sr: sr };
-}
+  return { sg: sg };
+} //funzione che inizializa le variabili fondamentali per la partit
 
 function SetOrder(game, sg) {
   let playedcard = game.card_played;
   //console.log(playedcard);
   let card_briscola = playedcard.filter(
     (card) => card.suit === sg.briscola.suit,
-  );
+  ); //riga che trova le carte di briscola giocate in questa mano
   console.log(card_briscola);
 
   if (card_briscola.length === 0) {
-    let mometum_briscola = playedcard[0];
+    let mometum_briscola = playedcard[0]; //se non c'è ne sono inizializza una briscola momentanea prima carta giocata
     card_briscola = playedcard.filter(
       (card) => card.suit === mometum_briscola.suit,
-    );
+    ); //cerca se ci sono altre carte con lo stesso seme della briscola momentanea
     ////console.log(card_briscola);
     if (card_briscola.length === 1) {
-      return 0;
+      return 0; // se c'è nè solo una vuol dire che deve prendere chi ha iniziato
     } else {
       if (card_briscola.find((c) => parseInt(c.number) === 1) !== undefined) {
         let index = playedcard.findIndex(
@@ -425,7 +449,8 @@ function SetOrder(game, sg) {
         );
         //////console.log(index);
         return index;
-      } else if (
+      } // se è presente un asso delle briscola momentanea
+      else if (
         card_briscola.find((c) => parseInt(c.number) === 3) !== undefined
       ) {
         let index = playedcard.findIndex(
@@ -433,20 +458,21 @@ function SetOrder(game, sg) {
         );
         //////console.log(index);
         return index;
-      } else {
+      } // se è presente un 3 delle briscola momentanea e non c'è un asso prende chi ha giocato il 3
+      else {
         let high_card = card_briscola.find(
           (c) =>
             parseInt(c.number) ===
             Math.max(...card_briscola.map((ca) => ca.number)),
-        );
+        ); //trova la carta dal valore (number) più alto
         //////console.log(high_card);
         let index = playedcard.findIndex(
           (c) =>
             c.suit === high_card.suit && parseInt(c.number) == high_card.number,
-        );
+        ); // cerca in che posizione si trova nella lista
         //////console.log(index);
-        return index;
-      }
+        return index; //index sarà la posizione del giocatore che prende
+      } //calcola chi prende se non trova ne asso ne 3
     }
   } else {
     if (card_briscola.find((c) => parseInt(c.number) === 1) !== undefined) {
@@ -476,7 +502,7 @@ function SetOrder(game, sg) {
       return index;
     }
   }
-}
+} //funzione di BRISCOLA  che calcola chi ha preso in questo turno
 /*console.log(
   SetOrder(
     {
@@ -499,9 +525,8 @@ function SetOrder(game, sg) {
   ),
 ); //se c'è una briscola funziona*/
 
-let punti_briscola = [11, 0, 10, 0, 0, 0, 0, 2, 3, 4];
-
 function punteggi_briscola(user) {
+  let punti_briscola = [11, 0, 10, 0, 0, 0, 0, 2, 3, 4];
   let punteggio = 0;
   user.mazzo.forEach((card) => {
     punteggio += punti_briscola[card.number - 1];

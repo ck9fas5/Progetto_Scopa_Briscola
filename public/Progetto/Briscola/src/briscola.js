@@ -30,6 +30,7 @@ const giocatore4 = document.getElementById("giocatore4");
 const div_briscola = document.getElementById("briscola");
 const played_card = document.getElementById("played_card");
 const deck = document.getElementById("deck");
+const turn_find = document.getElementById("turn_find");
 const b_passturn = document.getElementById("passturn");
 
 let socket;
@@ -94,6 +95,10 @@ socket.on("star", async (istance) => {
   tavolo(hand, users, briscola);
 });
 
+socket.on("fine partita", (punti) => {
+  console.log(punti);
+});
+
 socket.on("updateboard", (cards) => {
   let html = render_board(cards);
   played_card.innerHTML = html;
@@ -101,12 +106,13 @@ socket.on("updateboard", (cards) => {
 
 socket.on("start_turn_briscola", () => {
   //updte gio giocatore
-  console.log("dio");
+  turn_find.innerHTML = "Ѐ il tuo turno";
+  turn_find.classList.add("gradiant");
   click_carte();
 });
 
 b_listutenti.onclick = async () => {
-  let users = await getUsers();
+  let users = await getUsers(Cookies.get("username"));
   console.log(users);
   bodymodal.innerHTML = render_utenti(users.users);
   let buttons = document.querySelectorAll(".invite");
@@ -232,6 +238,8 @@ function click_carte() {
       socket.emit("update board", { room: room, card: card });
       giocatore1.innerHTML = render_playerCard(hand);
       setTimeout(() => {
+        turn_find.innerHTML = "";
+        turn_find.classList.remove("gradiant");
         socket.emit("end turn briscola", { room: room, card: card });
       }, 2000);
 

@@ -97,7 +97,7 @@ export const render_tavolo = (n, briscola) => {
   let path = briscola.path.split("/");
   let src = link_image + path[path.length - 1];
   list_html.push(
-    `<img src="${src}" class="" alt="carta" width="110px" height="155px">`,
+    `<img src="${src}" class="briscola_carta" alt="carta" width="110px" height="155px">`,
   );
   list_html.push(
     `<img src="../assets/card/back.png" class="" alt="carta" width="110px" height="155px">`,

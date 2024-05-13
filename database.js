@@ -117,6 +117,13 @@ const disconnect = async (id_utente) => {
   return { result: "ok" };
 };
 
+const svuota = async (table) => {
+  await executeQuery(`
+  DELETE FROM ${table}
+  `);
+  return { result: "ok" };
+};
+
 module.exports = {
   disconnect: disconnect,
   connect: connect,
@@ -126,4 +133,5 @@ module.exports = {
   createTable: createTable,
   get_partite_in_corso: get_partite_in_corso,
   impor: impor,
+  svuota: svuota,
 };

@@ -130,12 +130,6 @@ body{
   justify-content:space-between;
   padding-right:30%;
   padding-left:30%;
-  /*
-  position:absolute; 
-  top: 80%;
-  left:35%;
-  width:30%;
-  height:25%*/
 }
 .player_card2{
   /*background-color:#906464;*/
@@ -144,38 +138,17 @@ body{
   justify-content:space-between;
   padding-right:30%;
   padding-left:30%;
-  /*
-  position:absolute; 
-  top: 15%;
-  left:35%;
-  width:30%;
-  height:25%*/
 }
 .player_card3{
   /*background-color:#0011ff;*/
   display:flex;
   flex-direction:column;
   padding-left:10%;
-  /*
-  position:absolute; 
-  bottom: 30%;
-  right:84%;
-  width:25%;
-  height:35%;
-  transform:rotate(90deg)*/
 }
 .player_card4{
   /*background-color:#18f708;*/
   display:flex;
   flex-direction:column;
-  
-  /*
-  position:absolute; 
-  bottom: 30%;
-  left:78%;
-  width:25%;
-  height:50%;
-  transform:rotate(90deg)*/
 }
 
 .spazio_gioco{
@@ -198,6 +171,9 @@ background-color: #47cd47;}
   width:20%;
   height:45%;
 }
+.briscola_carta{
+  transform:rotate(270deg)
+}
 .deck{
   /*background-color:#f708d7;*/
   position: absolute;
@@ -206,7 +182,18 @@ background-color: #47cd47;}
   width:50%;
   height:40%
 }
-
+.us{
+  
+  width:50%;
+  height:10%;
+  position:absolute;
+  left:25%;
+  top:90%;
+  text-align:center;
+}
+.gradiant{
+  background: radial-gradient( #ffffff,#47cd47);
+}
 .immagine_ruotata{
   transform:rotate(90deg)
 }
