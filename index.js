@@ -14,6 +14,9 @@ let users_socket = [];
 let games = [];
 let started_games = [];
 let started_round = [];
+let punteggio = 0;
+let length_card = [];
+let l = [];
 
 const GetUser = async () => {
   let users = await db.getting("User");
@@ -31,7 +34,7 @@ const GetCarte = async () => {
 };
 
 const FindUsername = (list_user, id) => {
-  console.log(list_user);
+  //console.log(list_user);
   return list_user.find((u) => u.id === id).username;
 };
 
@@ -96,7 +99,7 @@ app.get("/card_get", async (req, res) => {
 });
 
 app.get("/user_get/:usernam", async (req, res) => {
-  //console.log(req.params.usernam);
+  console.log(req.params.usernam);
   let users = await GetUser("User");
   ////console.log(users);
   let userss = users_socket.map((us) => {
@@ -171,7 +174,7 @@ io.on("connection", (socket) => {
         .to(room.users[0])
         .emit("join user", list_user2.splice(0, 1));
     }
-    //console.log(games);
+    console.log(games);
     //console.log("/n");
   });
 
@@ -240,7 +243,7 @@ io.on("connection", (socket) => {
     let users = await GetUser("User");
     let sg = started_games.find((s) => s.room === game.room);
     let sr = started_round.find((s) => s.room === game.room);
-    
+
     sr.index += 1;
     //console.log(40 / sr.order.length, sg.list_turncard.length);
     if (sr.index === sr.order.length) {
@@ -280,7 +283,7 @@ io.on("connection", (socket) => {
               users_socket.find((us) => us.socket_id === is.user).user,
             ),
             mazzo: is.mazzo,
-            punti: 0,
+            punti: is.punti,
           };
         });
         console.log(punteggi);
@@ -318,6 +321,11 @@ io.on("connection", (socket) => {
     io.to(sg.room).emit("updateboard", sr.card_played);
   });
 
+  socket.on("update scopa", (game) => {
+    let sg = started_games.find((s) => s.room === game.room);
+    io.to(sg.room).emit("updatescopa", game.card);
+  });
+
   //gestione partita di scopa
   socket.on("start game scopa", async (game) => {
     let room = games.find((g) => g.room === game);
@@ -328,7 +336,7 @@ io.on("connection", (socket) => {
     //console.log(sg, sr);
     let carte_terra = sg.deck.slice(0, 4);
     sg.deck.splice(0, 4);
-    sr.order.forEach((element) => {
+    sg.order.forEach((element) => {
       let hands = sg.deck.slice(0, 3);
       sg.deck.splice(0, 3);
       io.to(element).emit("start scopa", {
@@ -342,11 +350,39 @@ io.on("connection", (socket) => {
 
   socket.on("end turn scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
-    carte_scopa.push(sg.carte_prese);
-    let punteggio = punteggi_scopa(game.carte_prese, sg.order[sg.index]);
-    if (game.card.length === 0) {
-      punteggio.punteggio += 1;
+    let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
+    sg.taken_card.find((u) => u === user).mazzo.push(sg.carte_prese);
+
+    if (game.hand.length === 0) {
+      l.push("w");
     }
+    if (l.length === 2) {
+      l = [];
+      sg.order.forEach((u, indi) => {
+        if (sg.deck.length > 0) {
+          let card = sg.deck.slice(0, 3);
+          sg.deck.splice(0, 3);
+          io.to(u).emit("draw card", { card: card, game: sg });
+        }
+        if (indi === sg.index) {
+          io.to(u).emit("start_turn_scopa");
+        }
+      });
+    }
+
+    if (game.card.length === 0) {
+      punteggio = { punteggio: 1, user: user };
+    }
+    if (game.card.length === 0 && sg.taken_card.length === 40) {
+      length_card.push({ num: carte_prese.length, user: user });
+      let punti = punteggi_scopa(game.carte_prese, user);
+      if (user === punteggio.user) {
+        punti.punteggio += punteggio.punteggio;
+      }
+      io.to(sg.room).emit("fine partita", punti);
+    }
+    console.log(game.card);
+    io.to(sg.room).emit("updatescopa", game.card);
     sg.index += 1;
     if (sg.index === sg.order.length) {
       sg.index = 0;
@@ -417,7 +453,6 @@ async function SetUpGameScopa(room) {
     room: room.room,
     deck: deck,
     taken_card: taken_card,
-    list_turncard: [],
     order: order,
     index: index,
   }; //crea oggetto sg (started games) il quale contiene tutte gli attributo di una partita come
@@ -557,71 +592,62 @@ function calcola_primiera(primiera, n, punteggio, numero) {
   return { p: punteggio, pr: primiera1 };
 }
 
-function punteggi_scopa(carte, ordine) {
+function punteggi_scopa(carte_giocatore, user) {
   let punteggio = 0;
-  let punteggi;
-  let l = 0;
   let p;
-  let carte_giocatore = [];
-  ordine.users.forEach((element) => {
-    carte_giocatore = carte.filter((c) => c.user === element);
-    carte_giocatore.forEach((el) => {
-      let primiera = carte_giocate.filter((v) => v.valore === "7");
-      if (primiera.length === 4) {
-        punteggio += 1;
-      } else if (primiera.length === 3) {
-        p = calcola_primiera(primiera, 1, punteggio, "6");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      } else if (primiera.lenght === 2) {
-        p = calcola_primiera(primiera, 2, punteggio, "6");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      } else if (primiera.lenght === 1) {
-        p = calcola_primiera(primiera, 3, punteggio, "6");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      }
-      if (primiera.length === 4 && punteggio === 0) {
-        punteggio += 1;
-      } else if (primiera.length === 3) {
-        p = calcola_primiera(primiera, 1, punteggio, "5");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      } else if (primiera.lenght === 2) {
-        p = calcola_primiera(primiera, 2, punteggio, "5");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      } else if (primiera.lenght === 1) {
-        p = calcola_primiera(primiera, 3, punteggio, "5");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      }
-      if (primiera.length === 4 && punteggio === 0) {
-        punteggio += 1;
-      } else if (primiera.length === 3) {
-        p = calcola_primiera(primiera, 1, punteggio, "1");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      } else if (primiera.lenght === 2) {
-        p = calcola_primiera(primiera, 2, punteggio, "1");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      } else if (primiera.lenght === 1) {
-        p = calcola_primiera(primiera, 3, punteggio, "1");
-        punteggio += p.punteggio;
-        primiera.push(p.pr);
-      }
-      if (el.seme === "ori" && el.valore === "7") {
-        punteggio += 1;
-      }
-      if (carte_giocatore.length > l) {
-        l = element;
-      }
-    });
+
+  carte_giocatore.forEach((el) => {
+    let primiera = carte_giocatore.filter((v) => v.valore === "7");
+    if (primiera.length === 4) {
+      punteggio += 1;
+    } else if (primiera.length === 3) {
+      p = calcola_primiera(primiera, 1, punteggio, "6");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    } else if (primiera.lenght === 2) {
+      p = calcola_primiera(primiera, 2, punteggio, "6");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    } else if (primiera.lenght === 1) {
+      p = calcola_primiera(primiera, 3, punteggio, "6");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    }
+    if (primiera.length === 4 && punteggio === 0) {
+      punteggio += 1;
+    } else if (primiera.length === 3) {
+      p = calcola_primiera(primiera, 1, punteggio, "5");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    } else if (primiera.lenght === 2) {
+      p = calcola_primiera(primiera, 2, punteggio, "5");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    } else if (primiera.lenght === 1) {
+      p = calcola_primiera(primiera, 3, punteggio, "5");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    }
+    if (primiera.length === 4 && punteggio === 0) {
+      punteggio += 1;
+    } else if (primiera.length === 3) {
+      p = calcola_primiera(primiera, 1, punteggio, "1");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    } else if (primiera.lenght === 2) {
+      p = calcola_primiera(primiera, 2, punteggio, "1");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    } else if (primiera.lenght === 1) {
+      p = calcola_primiera(primiera, 3, punteggio, "1");
+      punteggio += p.punteggio;
+      primiera.push(p.pr);
+    }
+    if (el.seme === "ori" && el.valore === "7") {
+      punteggio += 1;
+    }
   });
-  let cart = ordine.users.find((c) => c == l);
-  return punteggi;
+  return { punteggio: punteggio, user: user };
 }
 
 /*

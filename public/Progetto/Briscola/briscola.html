@@ -85,12 +85,46 @@
         </div>
       </div>
     </nav>
-    <div
-      class="alert alert-warning alert-dismissible fade"
-      role="alert"
-      id="alert_invite"
-    ></div>
+
+    <div class="container-flex d-none" id="waiting">
+      <div class="hourglassBackground">
+        <div class="hourglassContainer">
+          <div class="hourglassCurves"></div>
+          <div class="hourglassCapTop"></div>
+          <div class="hourglassGlassTop"></div>
+          <div class="hourglassSand"></div>
+          <div class="hourglassSandStream"></div>
+          <div class="hourglassCapBottom"></div>
+          <div class="hourglassGlass"></div>
+        </div>
+      </div>
+      <div style="text-align: center">
+        <strong>Attendi che l'host inizi la partita</strong>
+      </div>
+    </div>
+
+    <button
+      class="buttonn d-none text-dark"
+      id="startgame"
+      disabled
+      data-bs-dismiss="alert"
+    >
+      P L A Y
+      <div id="clip">
+        <div id="leftTop" class="corner"></div>
+        <div id="rightBottom" class="corner"></div>
+        <div id="rightTop" class="corner"></div>
+        <div id="leftBottom" class="corner"></div>
+      </div>
+      <span id="rightArrow" class="arrow"></span>
+      <span id="leftArrow" class="arrow"></span>
+    </button>
     <div class="container" id="pre-game">
+      <div
+        class="alert alert-warning alert-dismissible fade"
+        role="alert"
+        id="alert_invite"
+      ></div>
       <div class="custom-container">
         <img src="../assets/immagini/carte.jpg" class="immagine" />
       </div>
@@ -131,22 +165,6 @@
           </button>
         </div>
       </div>
-      <button
-        class="buttonn d-none text-dark"
-        id="startgame"
-        disabled
-        data-bs-dismiss="alert"
-      >
-        P L A Y
-        <div id="clip">
-          <div id="leftTop" class="corner"></div>
-          <div id="rightBottom" class="corner"></div>
-          <div id="rightTop" class="corner"></div>
-          <div id="leftBottom" class="corner"></div>
-        </div>
-        <span id="rightArrow" class="arrow"></span>
-        <span id="leftArrow" class="arrow"></span>
-      </button>
       <button type="button" id="tavolo" class="btn">Tavolo</button>
     </div>
 
@@ -159,10 +177,13 @@
         <div id="row2">
           <div class="player_card3" id="giocatore3"></div>
           <div class="spazio_gioco">
-            <div class="briscola" id="briscola"></div>
-            <div class="played" id="deck"></div>
-            <div class="deck" id="played_card"></div>
-            <div class="us text-centre" id="turn_find"></div>
+            <div class="d-none" id="win_div"></div>
+            <div id="play_div">
+              <div class="briscola" id="briscola"></div>
+              <div class="played" id="deck"></div>
+              <div class="deck" id="played_card"></div>
+              <div class="us text-centre" id="turn_find"></div>
+            </div>
           </div>
           <div class="player_card4" id="giocatore4"></div>
         </div>
@@ -337,6 +358,6 @@
         </div>
       </div>
     </div>
+    <script src="./src/briscola.js" type="module"></script>
   </body>
-  <script src="./src/briscola.js" type="module"></script>
 </html>

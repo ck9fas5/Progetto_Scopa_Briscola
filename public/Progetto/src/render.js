@@ -5,7 +5,7 @@ export const render_alert = (invite, username) => {
   if (username !== "") {
     let alarm_tempalte = `<strong>Sei stato invitato da #USERNAME!</strong>
                         <p class="mb-0">
-                            <button type="button" id="button_accept"class="btn btn-outline-info" data-bs-dismiss="alert" aria-label="Close">Accetta</button>
+                            <button type="button" id="button_accept"class="button btn btn-outline-info" data-bs-dismiss="alert" aria-label="Close">Accetta</button>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></p>`;
     let html = "";
     html += alarm_tempalte.replace("#USERNAME", invite.username);
@@ -21,7 +21,7 @@ export const render_alert = (invite, username) => {
 export const render_utenti = (users) => {
   const templateuser = `<tr>
                         <td colspan="3">#USERNAME</td>
-                        <td><button class="btn btn-info invite" value="#ID" type="button" data-bs-dismiss="modal">Invita</button></td>
+                        <td><button class="button btn btn-info invite" value="#ID" type="button" data-bs-dismiss="modal">Invita</button></td>
                       </tr>`;
 
   let html = "";
@@ -59,7 +59,6 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
   hand.forEach((element) => {
     let path = element.path.split("/");
     let src = link_image + path[path.length - 1];
-    //console.log(src);
     html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
   });
   html += `<button class="button btn-outline droppa" type="button">Tira</button> `;
@@ -70,6 +69,7 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
     let src = link_image + path[path.length - 1];
     html += `<img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px">`;
   });
+
   list_html.push(html);
   if (n.length === 2) {
     list_html.push(
@@ -144,6 +144,17 @@ export const render_board = (cards) => {
     let src = link_image + path[path.length - 1];
     //console.log(src);
     html += `<img src="${src}" alt="carte" class="" width="110px" height="155px">`;
+  });
+  return html;
+};
+
+export const render_board_scopa = (cards) => {
+  let html = "";
+  cards.forEach((element) => {
+    let path = element.path.split("/");
+    let src = link_image + path[path.length - 1];
+    //console.log(src);
+    html += `<img src="${src}" alt="carte" class="carte_terra" width="110px" height="155px">`;
   });
   return html;
 };

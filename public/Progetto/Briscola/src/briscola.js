@@ -12,6 +12,7 @@ import {
 } from "../../src/render.js";
 
 const div_prepartita = document.getElementById("pre-game");
+const div_waiting = document.getElementById("waiting");
 const b_listutenti = document.getElementById("utenti_connessi");
 const b_createRoom = document.getElementById("createroom");
 const n_listpartite = document.getElementById("partite_in_corso");
@@ -23,6 +24,8 @@ const tavolo_button = document.getElementById("tavolo");
 const div_game = document.getElementById("game");
 const b_startgame = document.getElementById("startgame");
 
+const play_div = document.getElementById("play_div");
+const win_div = document.getElementById("win_div");
 const giocatore1 = document.getElementById("giocatore_principale");
 const giocatore2 = document.getElementById("giocatore2");
 const giocatore3 = document.getElementById("giocatore3");
@@ -48,18 +51,20 @@ let room = "";
     socket = io();
     socket.emit("accesso", Cookies.get("password"), Cookies.get("username"));
     let list_card = await getCard();
-    console.log(list_card);
+    //console.log(list_card);
     let path = list_card.card[0].path.split("/");
   }
 })();
 
 socket.on("invited", (utente) => {
-  console.log(utente);
-  console.log(render_alert(utente));
+  //console.log(utente);
+  //console.log(render_alert(utente));
   alert_invite.innerHTML = render_alert(utente);
   alert_invite.classList.add("show");
   let ba = document.getElementById("button_accept");
   ba.onclick = () => {
+    div_waiting.classList.remove("d-none");
+    div_prepartita.classList.add("d-none");
     room = utente.room;
     socket.emit("join games", utente.room);
   };
@@ -71,16 +76,21 @@ socket.on("join user", (list_user) => {
   b_startgame.onclick = () => {
     socket.emit("start game briscola", room);
   };
-  console.log(list_user);
+  //console.log(list_user);
 });
 
 socket.on("draw card", async (data) => {
   hand.push(data.card);
+  //console.log(data);
+  if (data.game.deck.length - 3 <= 0) {
+    div_briscola.innerHTML = "";
+    deck.innerHTML = "";
+  }
   giocatore1.innerHTML = render_playerCard(hand);
 });
 
 socket.on("star", async (istance) => {
-  console.log("jdsk.j");
+  div_waiting.classList.add("d-none");
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
   div_prepartita.classList.add("d-none");
@@ -88,7 +98,7 @@ socket.on("star", async (istance) => {
   div_game.classList.add("d-block");
   alert_invite.classList.remove("show");
   alert_invite.classList.add("d-none");
-  console.log(istance);
+  //console.log(istance);
   let briscola = istance.briscola;
   hand = istance.hand;
   let users = istance.order;
@@ -97,6 +107,8 @@ socket.on("star", async (istance) => {
 
 socket.on("fine partita", (punti) => {
   console.log(punti);
+  play_div.classList.add("d-none");
+  win_div.classList.remove("d-none")
 });
 
 socket.on("updateboard", (cards) => {
@@ -105,7 +117,6 @@ socket.on("updateboard", (cards) => {
 });
 
 socket.on("start_turn_briscola", () => {
-  //updte gio giocatore
   turn_find.innerHTML = "Ѐ il tuo turno";
   turn_find.classList.add("gradiant");
   click_carte();
@@ -113,7 +124,7 @@ socket.on("start_turn_briscola", () => {
 
 b_listutenti.onclick = async () => {
   let users = await getUsers(Cookies.get("username"));
-  console.log(users);
+  //console.log(users);
   bodymodal.innerHTML = render_utenti(users.users);
   let buttons = document.querySelectorAll(".invite");
   buttons.forEach((b) => {
@@ -132,7 +143,7 @@ b_listutenti.onclick = async () => {
 
 n_listpartite.onclick = async () => {
   let partite = await GetPartite();
-  console.log(partite.games);
+  //console.log(partite.games);
   partitemodal.innerHTML = render_partite(partite.games);
 };
 
@@ -152,7 +163,7 @@ logout.onclick = () => {
 
 //https://uiverse.io/Navarog21/ordinary-rat-19 usare questo bottone bellissimo
 //ciao <3
-tavolo_button.onclick = () => {
+/*tavolo_button.onclick = () => {
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
   div_prepartita.classList.add("d-none");
@@ -191,13 +202,14 @@ tavolo_button.onclick = () => {
     path: "Progetto/assets/card/rSpade.png",
   });
   click_carte(h);
-};
+};*/
 
 function tavolo(hand, users, briscola) {
-  console.log(users);
+  //console.log(users);
+  b_startgame.classList.add("d-none");
   let user_card = render_playerCard(hand);
   let htmls = render_tavolo(users, briscola);
-  console.log(htmls);
+  //console.log(htmls);
   if (htmls.length === 1) {
     if (htmls[0].text !== "ok") {
       alert_invite.classList.remove("d-none");
@@ -221,16 +233,16 @@ function tavolo(hand, users, briscola) {
 
 function click_carte() {
   const carte_giocatore = document.querySelectorAll(".carte_giocatore");
-  console.log(carte_giocatore);
+  //console.log(carte_giocatore);
   carte_giocatore.forEach((carta) => {
     carta.addEventListener("click", () => {
-      console.log(carta);
+      //console.log(carta);
       let path = carta.src.split("/");
       let src = path[path.length - 1];
       let card = hand.find(
         (c) => c.path.split("/")[c.path.split("/").length - 1] === src,
       );
-      console.log(card);
+      //console.log(card);
       hand.splice(
         hand.findIndex((c) => c.suit === card.suit && c.number === card.number),
         1,
@@ -244,7 +256,7 @@ function click_carte() {
       }, 2000);
 
       //giocatore
-      console.log("carta giocata", src);
+      //console.log("carta giocata", src);
     });
   });
 }
