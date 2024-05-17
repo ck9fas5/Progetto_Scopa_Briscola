@@ -121,6 +121,42 @@ export const render_tavolo = (n, briscola) => {
   return list_html;
 };
 
+export const render_winner = (data) => {
+  console.log(data);
+  const templatew = `<div id="winner" class="bg-success">
+                      <div>#TEXT</div>
+                      <div>#POINT</div>
+                    </div>
+                  <div id="losser" class="bg-secondary">
+                      <div>#TEXT2</div>
+                      <div>#POINT2</div>
+                  </div></div>`;
+
+  const templatd = `<div class="bg-secondary">
+                      <div>#TEXT</div>
+                      <div>#POINT</div>
+                    </div>`;
+
+  let num_user = data[0].user.length;
+  let html = "";
+  if (num_user === 0) {
+    html = templatd.replace("#TEXT", "AVETE PAREGGIATO");
+  } else if (num_user === 1) {
+    html = templatew
+      .replace("#TEXT", data[0].user[0] + " HA VINTO")
+      .replace("#POINT", data[0].punti)
+      .replace("#TEXT2", data[1].user[0] + " HA PERSO")
+      .replace("#POINT2", data[1].punti);
+  } else {
+    html = templatew
+      .replace("#TEXT", `${data[0].user[0]} e ${data[0].user[1]} HANNO VINTO`)
+      .replace("#POINT", data[0].punti)
+      .replace("#TEXT2", `${data[1].user[0]} e ${data[1].user[1]} HANNO PERSO`)
+      .replace("#POINT2", data[1].punti);
+  }
+  return html;
+};
+
 export const render_playerCard = (hand) => {
   let html = "";
   hand.forEach((element) => {

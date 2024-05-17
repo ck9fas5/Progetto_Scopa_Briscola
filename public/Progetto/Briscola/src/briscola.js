@@ -9,7 +9,11 @@ import {
   render_playerCard,
   render_turno,
   render_board,
+  render_winner,
 } from "../../src/render.js";
+
+const pagina_game = "/Progetto/Briscola/briscola.html";
+const pagina_princi = "/Progetto/pagina_principale.html";
 
 const div_prepartita = document.getElementById("pre-game");
 const div_waiting = document.getElementById("waiting");
@@ -25,6 +29,10 @@ const div_game = document.getElementById("game");
 const b_startgame = document.getElementById("startgame");
 
 const play_div = document.getElementById("play_div");
+const modal = document.getElementById("resultmodal");
+const myModal = new bootstrap.Modal(modal, {
+  keyboard: false,
+});
 const win_div = document.getElementById("win_div");
 const giocatore1 = document.getElementById("giocatore_principale");
 const giocatore2 = document.getElementById("giocatore2");
@@ -63,6 +71,7 @@ socket.on("invited", (utente) => {
   alert_invite.classList.add("show");
   let ba = document.getElementById("button_accept");
   ba.onclick = () => {
+    b_createRoom.disabled = true;
     div_waiting.classList.remove("d-none");
     div_prepartita.classList.add("d-none");
     room = utente.room;
@@ -81,8 +90,8 @@ socket.on("join user", (list_user) => {
 
 socket.on("draw card", async (data) => {
   hand.push(data.card);
-  //console.log(data);
-  if (data.game.deck.length - 3 <= 0) {
+  console.log(data);
+  if (data.game.deck.length - (data.game.taken_card.length - 1) <= 0) {
     div_briscola.innerHTML = "";
     deck.innerHTML = "";
   }
@@ -106,9 +115,14 @@ socket.on("star", async (istance) => {
 });
 
 socket.on("fine partita", (punti) => {
-  console.log(punti);
   play_div.classList.add("d-none");
-  win_div.classList.remove("d-none")
+  console.log(punti);
+  myModal.show();
+  win_div.innerHTML = render_winner(FindWinner(punti));
+  win_div.classList.remove("d-none");
+  modal.addEventListener("hidden.bs.modal", (event) => {
+    window.location.href = pagina_princi;
+  });
 });
 
 socket.on("updateboard", (cards) => {
@@ -120,6 +134,13 @@ socket.on("start_turn_briscola", () => {
   turn_find.innerHTML = "Ѐ il tuo turno";
   turn_find.classList.add("gradiant");
   click_carte();
+});
+
+socket.on("quit", () => {
+  alert("un utente si è disconesso, partita annullata");
+  setTimeout(() => {
+    window.location.href = pagina_game;
+  }, 5000);
 });
 
 b_listutenti.onclick = async () => {
@@ -163,7 +184,34 @@ logout.onclick = () => {
 
 //https://uiverse.io/Navarog21/ordinary-rat-19 usare questo bottone bellissimo
 //ciao <3
+
+function FindWinner(list_poits) {
+  console.log(list_poits);
+  let s1 = { user: [], punti: 0 };
+  let s2 = { user: [], punti: 0 };
+  list_poits.forEach((player, indi) => {
+    if (indi % 2 === 0) {
+      s1.user.push(player.username);
+      s1.punti += player.punti;
+    } else {
+      s2.user.push(player.username);
+      s2.punti += player.punti;
+    }
+  });
+
+  if (s1.punti > s2.punti) {
+    return [s1, s2];
+  } else if (s1.punti < s2.punti) {
+    return [s2, s1];
+  } else {
+    return [[]];
+  }
+}
 /*tavolo_button.onclick = () => {
+  let modal = document.getElementById("resultmodal");
+  
+  myModal.show();
+
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
   div_prepartita.classList.add("d-none");
@@ -171,6 +219,13 @@ logout.onclick = () => {
   div_game.classList.add("d-block");
   alert_invite.classList.remove("show");
   alert_invite.classList.add("d-none");
+  let g = [
+    { username: "pippo", punti: 110 },
+    { username: "mirco", punti: 110 },
+    { username: "manni", punti: 110 },
+    { username: "gino", punti: 140 },
+  ];
+  win_div.innerHTML = render_winner(FindWinner(g));
   let users = [
     { id: 1, username: "vale", password: "vale", status: 1 },
     { id: 28, username: "Ck9fas5", password: "12345", status: 1 },
@@ -202,6 +257,9 @@ logout.onclick = () => {
     path: "Progetto/assets/card/rSpade.png",
   });
   click_carte(h);
+  modal.addEventListener("hidden.bs.modal", (event) => {
+    window.location.href = "/Progetto/pagina_principale.html";
+  });
 };*/
 
 function tavolo(hand, users, briscola) {

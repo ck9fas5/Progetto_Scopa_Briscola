@@ -72,9 +72,9 @@ const insert = async (table, data) => {
   return await executeQuery(query);
 };
 
-const impor = async (table, data) => {
+const update = async (table, data, key) => {
   return await executeQuery(
-    `UPDATE ${table} SET ${Object.keys(data)} = ${formatted_values(data)}`,
+    `UPDATE ${table} SET ${Object.keys(data)} WHERE ${Object.keys(key)}=${Object.values(key)}= ${formatted_values(data)}`,
   );
 };
 
@@ -117,11 +117,10 @@ const disconnect = async (id_utente) => {
   return { result: "ok" };
 };
 
-const svuota = async (table) => {
-  await executeQuery(`
-  DELETE FROM ${table}
-  `);
-  return { result: "ok" };
+const elimina = async (table, data) => {
+  return await executeQuery(
+    `DELETE FROM ${table} WHERE ${Object.keys(data)} = ${formatted_values(data)}`,
+  );
 };
 
 module.exports = {
@@ -132,6 +131,6 @@ module.exports = {
   getting: getting,
   createTable: createTable,
   get_partite_in_corso: get_partite_in_corso,
-  impor: impor,
-  svuota: svuota,
+  update: update,
+  elimina: elimina,
 };

@@ -1,5 +1,13 @@
 {
   "files": {
+    "index.js": [
+      {
+        "id": "9b549a7f-5e02-4c8e-9b77-05c36b1f99ed",
+        "line": 324,
+        "version": 22365,
+        "index": 9757
+      }
+    ],
     "public/index.html": [
       {
         "id": "7aeb7b9c-3a3a-472f-a28c-29c4397a077d",

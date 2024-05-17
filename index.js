@@ -1,5 +1,6 @@
 //in questo file è presente il codice del server
 const db = require("./database.js");
+const briscola = require("./briscola.js");
 const express = require("express");
 const http = require("http");
 const path = require("path");
@@ -145,7 +146,7 @@ io.on("connection", (socket) => {
   //gestione accesso utente, invito utente, disconessione utente e unione ad una stanza
   socket.on("accesso", async (password, username) => {
     let users = await GetUser("User");
-    ////console.log(users, password, username);
+    //console.log(users, password, username);
     let user = users.find(
       (u) => u.password === password && u.username === username,
     );
@@ -184,7 +185,7 @@ io.on("connection", (socket) => {
     let senter_user = users_socket.find((us) => us.socket_id === socket.id);
     let invited_user = users_socket.find((us) => us.user === utente);
     //console.log(invited_user);
-    console.log(senter_user);
+    //console.log(senter_user);
     //console.log("");
     let room = games.find((g) => g.users.includes(senter_user.socket_id));
     if (room !== undefined) {
@@ -198,7 +199,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    ////console.log("user disconnected");
     ////console.log(users_socket.find((us) => us.socket_id === socket.id));
     if (users_socket.find((us) => us.socket_id === socket.id) !== undefined) {
       ////console.log(users_socket[0].socket_id);
@@ -208,16 +208,42 @@ io.on("connection", (socket) => {
         ),
         1,
       );
+      let room = games.find((g) => g.users.includes(socket.id));
+      if (room !== undefined) {
+        //console.log(room.users.indexOf(socket.id))
+        room.users.splice(room.users.indexOf(socket.id), 1);
+        socket.to(room.room).emit("quit");
+        if (room.users.length === 0) {
+          db.elimina("Game", { id: room.room });
+          if (started_games.find((sg) => sg.room === room.room) !== undefined) {
+            started_games.splice(
+              started_games.findIndex((g) => g.room === room.room),
+              1,
+            );
+            started_round.splice(
+              started_round.findIndex((g) => g.room === room.room),
+              1,
+            );
+          }
+          games.splice(
+            games.findIndex((g) => g.room === room.room),
+            1,
+          );
+        }
+      }
+      console.log(games);
+      console.log(started_games);
+      console.log(started_round);
+      ////console.log(users_socket);
+      //console.log("/n");
     }
-    ////console.log(users_socket);
-    //console.log("/n");
   });
 
   //gesione partita di briscola
   socket.on("start game briscola", async (game) => {
     let room = games.find((g) => g.room === game);
     games[games.indexOf(room)]["state"] = true;
-    let dati = await SetUpGameBriscola(room);
+    let dati = await briscola.SetUpGameBriscola(room, await GetCarte());
     let sg = dati.sg;
     let sr = dati.sr;
     started_games.push(sg);
@@ -250,7 +276,7 @@ io.on("connection", (socket) => {
       //controllo se è finita la mano
       sr.index = 0;
       sg.list_turncard.push(sr.card_played);
-      let index_order = SetOrder(sr, sg);
+      let index_order = briscola.setOrder(sr, sg);
       console.log(index_order);
       ////console.log(sg.order);
       for (let i = 0; i < index_order; i++) {
@@ -271,7 +297,7 @@ io.on("connection", (socket) => {
         //controllo se è finita la partita
         sr.order.forEach((u) => {
           let ista = sg.taken_card.find((is) => is.user === u);
-          let punti = punteggi_briscola(ista);
+          let punti = briscola.PointBriscola(ista);
           ista["punti"] = punti;
           console.log(punti);
           //console.log(user.mazzo);
@@ -288,6 +314,14 @@ io.on("connection", (socket) => {
         });
         console.log(punteggi);
         io.to(sg.room).emit("fine partita", punteggi);
+        started_games.splice(
+          started_games.findIndex((s) => s.room === sg.room),
+          1,
+        );
+        started_round.splice(
+          started_games.findIndex((s) => s.room === sr.room),
+          1,
+        );
       } else {
         sr.order.forEach((u, indi) => {
           if (sg.deck.length > 0) {
@@ -351,8 +385,8 @@ io.on("connection", (socket) => {
   socket.on("end turn scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
     let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
-    sg.taken_card.find((u) => u === user).mazzo.push(sg.carte_prese);
 
+    user.mazzo.push(game.carte_prese);
     if (game.hand.length === 0) {
       l.push("w");
     }
@@ -371,13 +405,31 @@ io.on("connection", (socket) => {
     }
 
     if (game.card.length === 0) {
-      punteggio = { punteggio: 1, user: user };
+      scopa = { punteggio: punteggio + 1, user: user };
     }
-    if (game.card.length === 0 && sg.taken_card.length === 40) {
-      length_card.push({ num: carte_prese.length, user: user });
+    console.log(sg.taken_card, 222);
+    let carte_scopa = [];
+    sg.taken_card.forEach((is) => {
+      is.mazzo.forEach((element) => {
+        element.forEach((el) => {
+          carte_scopa.push(el);
+        });
+      });
+    });
+    if (carte_scopa.length + game.card.length === 40) {
+      if (game.card.length !== 0 && game.preso === true) {
+        user.mazzo.push(game.card);
+        game.card = [];
+      }
+      length_card.push({ num: game.carte_prese.length, user: user });
       let punti = punteggi_scopa(game.carte_prese, user);
-      if (user === punteggio.user) {
+      console.log(punti, 4444);
+      if (punti.find((us) => us.user === user) !== undefined) {
         punti.punteggio += punteggio.punteggio;
+        if (scopa !== "" && scopa.find((us) => us.user === user)) {
+          let u = scopa.find((us) => us.user === user);
+          punti.punteggio += u.punteggio;
+        }
       }
       io.to(sg.room).emit("fine partita", punti);
     }
@@ -393,57 +445,14 @@ io.on("connection", (socket) => {
   });
 });
 
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
-    let temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-  }
-} //funzione che randomizza array
-
-async function SetUpGameBriscola(room) {
-  let type = "b";
-
-  let order = room.users.slice(0); //ottiene una lista di socket_id mescolata a caso
-  shuffleArray(order);
-
-  let deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
-  shuffleArray(deck);
-
-  let briscola = deck[deck.length - 1]; //definisce la briscola
-
-  let taken_card = order.map((p) => ({ user: p, mazzo: [] })); //crea i "mazzetti di ogni giocatore"
-
-  let index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn
-
-  let sr = {
-    room: room.room,
-    order: order,
-    index: index,
-    card_played: [],
-  }; // crea un oggetto sr (started round) che contiene le proprietà di un rount come ordine e le carte giocate in quel round
-
-  let sg = {
-    type: type,
-    room: room.room,
-    deck: deck,
-    taken_card: taken_card,
-    briscola: briscola,
-    list_turncard: [],
-  }; //crea oggetto started_game (sg), che salvera tutti gli attributi della cartica come briscola e i mazzetti e il mazzo
-
-  return { sg: sg, sr: sr };
-} //funzione che inizializa le variabili fondamentali per la partita
-
 async function SetUpGameScopa(room) {
   let type = "s";
 
   let order = room.users.slice(0); //ottiene una lista di socket_id mescolata a caso
-  shuffleArray(order);
+  briscola.shuffleArray(order);
 
   let deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
-  shuffleArray(deck);
+  briscola.shuffleArray(deck);
 
   let index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn
   let taken_card = order.map((p) => ({ user: p, mazzo: [] })); //crea i "mazzetti di ogni giocatore"
@@ -460,122 +469,6 @@ async function SetUpGameScopa(room) {
 
   return { sg: sg };
 } //funzione che inizializa le variabili fondamentali per la partit
-
-function SetOrder(game, sg) {
-  let playedcard = game.card_played;
-  //console.log(playedcard);
-  let card_briscola = playedcard.filter(
-    (card) => card.suit === sg.briscola.suit,
-  ); //riga che trova le carte di briscola giocate in questa mano
-  console.log(card_briscola);
-
-  if (card_briscola.length === 0) {
-    let mometum_briscola = playedcard[0]; //se non c'è ne sono inizializza una briscola momentanea prima carta giocata
-    card_briscola = playedcard.filter(
-      (card) => card.suit === mometum_briscola.suit,
-    ); //cerca se ci sono altre carte con lo stesso seme della briscola momentanea
-    ////console.log(card_briscola);
-    if (card_briscola.length === 1) {
-      return 0; // se c'è nè solo una vuol dire che deve prendere chi ha iniziato
-    } else {
-      if (card_briscola.find((c) => parseInt(c.number) === 1) !== undefined) {
-        let index = playedcard.findIndex(
-          (c) => c.suit === mometum_briscola.suit && parseInt(c.number) == 1,
-        );
-        //////console.log(index);
-        return index;
-      } // se è presente un asso delle briscola momentanea
-      else if (
-        card_briscola.find((c) => parseInt(c.number) === 3) !== undefined
-      ) {
-        let index = playedcard.findIndex(
-          (c) => c.suit === mometum_briscola.suit && parseInt(c.number) == 3,
-        );
-        //////console.log(index);
-        return index;
-      } // se è presente un 3 delle briscola momentanea e non c'è un asso prende chi ha giocato il 3
-      else {
-        let high_card = card_briscola.find(
-          (c) =>
-            parseInt(c.number) ===
-            Math.max(...card_briscola.map((ca) => ca.number)),
-        ); //trova la carta dal valore (number) più alto
-        //////console.log(high_card);
-        let index = playedcard.findIndex(
-          (c) =>
-            c.suit === high_card.suit && parseInt(c.number) == high_card.number,
-        ); // cerca in che posizione si trova nella lista
-        //////console.log(index);
-        return index; //index sarà la posizione del giocatore che prende
-      } //calcola chi prende se non trova ne asso ne 3
-    }
-  } else {
-    if (card_briscola.find((c) => parseInt(c.number) === 1) !== undefined) {
-      let index = playedcard.findIndex(
-        (c) => c.suit === sg.briscola.suit && parseInt(c.number) === 1,
-      );
-      return index;
-    } else if (
-      card_briscola.find((c) => parseInt(c.number) === 3) !== undefined
-    ) {
-      let index = playedcard.findIndex(
-        (c) => c.suit === sg.briscola.suit && parseInt(c.number) == 3,
-      );
-      //////console.log(index);
-      return index;
-    } else {
-      let high_card = card_briscola.find(
-        (c) =>
-          parseInt(c.number) ===
-          Math.max(...card_briscola.map((ca) => ca.number)),
-      );
-      ////console.log(high_card);
-      let index = playedcard.findIndex(
-        (c) => c.suit === high_card.suit && c.number == high_card.number,
-      );
-      //////console.log(index);
-      return index;
-    }
-  }
-} //funzione di BRISCOLA  che calcola chi ha preso in questo turno
-/*console.log(
-  SetOrder(
-    {
-      card_played: [
-        {
-          id: 24,
-          number: 3,
-          suit: "Coppe",
-          path: "Progetto/assets/card/treCoppe.png",
-        },
-        {
-          id: 29,
-          number: 8,
-          suit: "nbhjub",
-          path: "Progetto/assets/card/dCoppe.png",
-        },
-      ],
-    },
-    { briscola: { suit: "Coppe", number: "2" } },
-  ),
-); //se c'è una briscola funziona*/
-
-function punteggi_briscola(user) {
-  let punti_briscola = [11, 0, 10, 0, 0, 0, 0, 2, 3, 4];
-  let punteggio = 0;
-  user.mazzo.forEach((card) => {
-    punteggio += punti_briscola[card.number - 1];
-  });
-  return punteggio;
-}
-/*console.log(
-  punteggi_briscola({
-    user: "a",
-    mazzo: [
-      { number: 10 }
-    ],
-  }),
-);//console*/
 
 function calcola_primiera(primiera, n, punteggio, numero) {
   let semi = ["Bastoni", "Denari", "Spade", "Coppe"];

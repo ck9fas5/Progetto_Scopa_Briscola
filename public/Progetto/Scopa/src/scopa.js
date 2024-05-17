@@ -10,6 +10,7 @@ import {
 } from "../../src/render.js";
 
 const div_prepartita = document.getElementById("pre-game");
+const div_waiting = document.getElementById("waiting");
 const b_listutenti = document.getElementById("utenti_connessi");
 const b_createRoom = document.getElementById("createroom");
 const n_listpartite = document.getElementById("partite_in_corso");
@@ -45,18 +46,21 @@ let socket = io();
     socket = io();
     socket.emit("accesso", Cookies.get("password"), Cookies.get("username"));
     let list_card = await getCard();
-    console.log(list_card);
+    //console.log(list_card);
     let path = list_card.card[0].path.split("/");
   }
 })();
 
 socket.on("invited", (utente) => {
-  console.log(utente);
-  console.log(render_alert(utente));
+  //console.log(utente);
+  //console.log(render_alert(utente));
   alert_invite.innerHTML = render_alert(utente);
   alert_invite.classList.add("show");
   let ba = document.getElementById("button_accept");
   ba.onclick = () => {
+    b_createRoom.disabled = true;
+    div_waiting.classList.remove("d-none");
+    div_prepartita.classList.add("d-none");
     room = utente.room;
     socket.emit("join games", utente.room);
   };
@@ -138,9 +142,11 @@ function fine_turno(
   carta,
   t,
 ) {
+  let p;
   turn.innerHTML = "";
   turn.classList.remove("gradiant");
   if (t == "prese") {
+    p = true;
     carte_prese.forEach((el) => {
       let index = carte_terra.indexOf(
         carte_terra.find(
@@ -151,6 +157,7 @@ function fine_turno(
     });
   } else if (t == "drop") {
     carte_terra.push(carta_selezionata);
+    p = false;
   }
   let car;
   let c = calcola_path(carta);
@@ -167,6 +174,7 @@ function fine_turno(
     card: carte_terra,
     carte_prese: carte_prese,
     hand: hand,
+    preso: p,
   });
 
   tavolo(hand, users, carte_terra);
@@ -206,7 +214,7 @@ async function click_carte() {
   const carte_giocatore = document.querySelectorAll(".carte_giocatore");
   const carte_a_terra = document.querySelectorAll(".carte_terra");
   const drop = document.querySelector(".droppa");
-  console.log(carte_a_terra);
+  //console.log(carte_a_terra);
   let carte_prese = [];
   carte_giocatore.forEach((carta) => {
     carta.addEventListener("click", () => {
@@ -240,7 +248,7 @@ async function click_carte() {
           }
         });
         drop.onclick = () => {
-          console.log(carte_terra, carta_selezionata);
+          //console.log(carte_terra, carta_selezionata);
           let somme_possibili = somme(carte_terra, carta_selezionata.number);
           if (somme_possibili.length > 0) {
             if (somme_possibili[0].length === 1) {
@@ -288,6 +296,7 @@ async function click_carte() {
 }
 
 socket.on("start scopa", (istance) => {
+  div_waiting.classList.add("d-none");
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
   div_prepartita.classList.add("d-none");
@@ -295,7 +304,7 @@ socket.on("start scopa", (istance) => {
   div_game.classList.add("d-block");
   alert_invite.classList.remove("show");
   alert_invite.classList.add("d-none");
-  console.log(istance);
+  //console.log(istance);
   hand = istance.hand;
   carte_terra = istance.carte_terra;
   users = istance.order;

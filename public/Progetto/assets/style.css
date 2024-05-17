@@ -150,7 +150,13 @@ body{
   display:flex;
   flex-direction:column;
 }
-
+.win{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  
+}
 .spazio_gioco{
   position: relative;
 background-color: #47cd47;}

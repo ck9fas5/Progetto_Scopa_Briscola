@@ -177,8 +177,7 @@
         <div id="row2">
           <div class="player_card3" id="giocatore3"></div>
           <div class="spazio_gioco">
-            <div class="d-none" id="win_div"></div>
-            <div id="play_div">
+            <div id="play_div" class="">
               <div class="briscola" id="briscola"></div>
               <div class="played" id="deck"></div>
               <div class="deck" id="played_card"></div>
@@ -355,6 +354,32 @@
             </table>
           </div>
           <div class="modal-footer" id="bodymodal"></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="resultmodal"
+      tabindex="-1"
+      aria-labelledby="resultmodalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="resultmodalLabel">RISULTATI</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="body">
+            <div class="win" id="win_div"></div>
+            <div class="modal-footer" id="bodymodal"></div>
+          </div>
         </div>
       </div>
     </div>
