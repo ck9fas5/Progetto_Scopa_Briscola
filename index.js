@@ -21,7 +21,7 @@ let length_card = [];
 let l = [];
 let punti = [];
 let scopa = [];
-let ultimi = [];
+let ultimi = "";
 
 const GetUser = async () => {
   let users = await db.getting("User");
@@ -439,20 +439,9 @@ io.on("connection", (socket) => {
     let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
     user.mazzo.push(...game.carte_prese);
     user.preso = game.preso;
-    if (ultimi.find((u) => u.user === user.user) === undefined) {
-      ultimi.push({ user: user.user, ultimo: game.preso });
+    if (user.preso === true) {
+      ultimi = user.user;
     }
-    ultimi.forEach((element) => {
-      if (element.user === user.user) {
-        if (element.ultimo === true) {
-          ultimi.forEach((e) => {
-            if (e.user !== element.user) {
-              e.ultimo = false;
-            }
-          });
-        }
-      }
-    });
 
     console.log(sg.taken_card);
     if (game.hand.length === 0) {
@@ -497,7 +486,7 @@ io.on("connection", (socket) => {
     if (carte_scopa.length + game.card.length === 40) {
       let punti_giocatore = [];
       if (game.card.length !== 0) {
-        let ultimo = sg.taken_card.find((u) => u.preso === "ultimo");
+        let ultimo = sg.taken_card.find((u) => u.user === ultimi);
         console.log(ultimo);
         ultimo.mazzo.push(...game.card);
         game.card = [];
