@@ -318,6 +318,41 @@
         </div>
       </div>
     </div>
+    <div
+      class="modal fade"
+      id="resultmodal"
+      tabindex="-1"
+      aria-labelledby="resultmodalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="resultmodalLabel">RISULTATI</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="vittoria"></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="principale"
+              class="btn btn-info button"
+              data-bs-dismiss="modal"
+            >
+              Pagina principale
+            </button>
+            <button type="button" id="gioca_ancora" class="btn btn-info button">
+              Gioca ancora
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div
       class="modal fade"
@@ -342,6 +377,7 @@
               <div class="row">
                 <div class="col-7">
                   <input
+                    id="cerca"
                     class="form-control me-2"
                     type="search"
                     placeholder="Search"
@@ -349,7 +385,11 @@
                   />
                 </div>
                 <div class="col">
-                  <button class="button btn btn-outline-info" type="submit">
+                  <button
+                    class="button btn btn-outline-info"
+                    id="cerca_utenti"
+                    type="button"
+                  >
                     Cerca
                   </button>
                 </div>
@@ -396,11 +436,16 @@
                     class="form-control me-2"
                     type="search"
                     placeholder="Search"
+                    id="cerca"
                     aria-label="Search"
                   />
                 </div>
                 <div class="col">
-                  <button class="button btn btn-outline-info" type="submit">
+                  <button
+                    class="button btn btn-outline-info"
+                    id="cerca_utenti"
+                    type="button"
+                  >
                     Cerca
                   </button>
                 </div>

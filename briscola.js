@@ -113,6 +113,7 @@ async function SetUpGameBriscola(room, carte) {
     deck: deck,
     taken_card: taken_card,
     briscola: briscola,
+    spectetor:[],
     list_turncard: [],
   }; //crea oggetto started_game (sg), che salvera tutti gli attributi della cartica come briscola e i mazzetti e il mazzo
 

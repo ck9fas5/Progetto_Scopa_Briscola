@@ -7,33 +7,40 @@ import {
   render_partite,
   render_tavolo,
   render_playerCard,
+  render_backhand,
   render_turno,
   render_board,
   render_winner,
 } from "../../src/render.js";
+const { Scene, Sprite } = spritejs;
 
 const pagina_game = "/Progetto/Briscola/briscola.html";
 const pagina_princi = "/Progetto/pagina_principale.html";
-
 const div_prepartita = document.getElementById("pre-game");
 const div_waiting = document.getElementById("waiting");
+const div_game = document.getElementById("game");
+const container = document.querySelector("#game");
+
+const play_div = document.getElementById("play_div");
+const win_div = document.getElementById("win_div");
+
 const b_listutenti = document.getElementById("utenti_connessi");
 const b_createRoom = document.getElementById("createroom");
 const n_listpartite = document.getElementById("partite_in_corso");
+const b_startgame = document.getElementById("startgame");
+const b_back = document.getElementById("back");
+
 const alert_invite = document.getElementById("alert_invite");
 const partitemodal = document.getElementById("partitemodal");
 const bodymodal = document.getElementById("bodymodal");
+
 const logout = document.getElementById("logout");
 const tavolo_button = document.getElementById("tavolo");
-const div_game = document.getElementById("game");
-const b_startgame = document.getElementById("startgame");
-
-const play_div = document.getElementById("play_div");
 const modal = document.getElementById("resultmodal");
 const myModal = new bootstrap.Modal(modal, {
   keyboard: false,
 });
-const win_div = document.getElementById("win_div");
+
 const giocatore1 = document.getElementById("giocatore_principale");
 const giocatore2 = document.getElementById("giocatore2");
 const giocatore3 = document.getElementById("giocatore3");
@@ -41,6 +48,7 @@ const giocatore4 = document.getElementById("giocatore4");
 const div_briscola = document.getElementById("briscola");
 const played_card = document.getElementById("played_card");
 const deck = document.getElementById("deck");
+const num_deck = document.getElementById("num_deck");
 const turn_find = document.getElementById("turn_find");
 const b_passturn = document.getElementById("passturn");
 
@@ -88,6 +96,34 @@ socket.on("join user", (list_user) => {
   //console.log(list_user);
 });
 
+socket.on("start watch", (game) => {
+  console.log(game);
+  div_prepartita.classList.add("d-none");
+  b_back.classList.remove("d-none");
+  div_game.classList.remove("d-none");
+  alert_invite.classList.remove("show");
+  alert_invite.classList.add("d-none");
+  tavolo("", game.order, game.briscola);
+  if (game.history.length > 0) {
+    //console.log(game.history[game.history.length - 1]);
+    let html = render_board(game.history[game.history.length - 1]);
+    played_card.innerHTML = html;
+  }
+});
+
+socket.on("star", async (istance) => {
+  div_waiting.classList.add("d-none");
+  div_prepartita.classList.add("d-none");
+  div_game.classList.remove("d-none");
+  alert_invite.classList.remove("show");
+  alert_invite.classList.add("d-none");
+  //console.log(istance);
+  let briscola = istance.briscola;
+  hand = istance.hand;
+  let users = istance.order;
+  tavolo(hand, users, briscola);
+});
+
 socket.on("draw card", async (data) => {
   hand.push(data.card);
   console.log(data);
@@ -98,20 +134,21 @@ socket.on("draw card", async (data) => {
   giocatore1.innerHTML = render_playerCard(hand);
 });
 
-socket.on("star", async (istance) => {
-  div_waiting.classList.add("d-none");
-  div_prepartita.classList.add("d-none");
-  div_game.classList.remove("d-none");
-  div_prepartita.classList.add("d-none");
-  div_game.classList.remove("d-none");
-  div_game.classList.add("d-block");
-  alert_invite.classList.remove("show");
-  alert_invite.classList.add("d-none");
-  //console.log(istance);
-  let briscola = istance.briscola;
-  hand = istance.hand;
-  let users = istance.order;
-  tavolo(hand, users, briscola);
+socket.on("updateboard", (game) => {
+  console.log(game);
+  const num_deck = document.getElementById("num_deck");
+  console.log(num_deck);
+  if (num_deck !== null) {
+    num_deck.innerHTML = game.deck.length;
+  }
+  let html = render_board(game.cards);
+  played_card.innerHTML = html;
+});
+
+socket.on("start_turn_briscola", () => {
+  turn_find.innerHTML = "Ѐ il tuo turno";
+  turn_find.classList.add("gradiant");
+  click_carte();
 });
 
 socket.on("fine partita", (punti) => {
@@ -125,19 +162,8 @@ socket.on("fine partita", (punti) => {
   });
 });
 
-socket.on("updateboard", (cards) => {
-  let html = render_board(cards);
-  played_card.innerHTML = html;
-});
-
-socket.on("start_turn_briscola", () => {
-  turn_find.innerHTML = "Ѐ il tuo turno";
-  turn_find.classList.add("gradiant");
-  click_carte();
-});
-
 socket.on("quit", () => {
-  alert("un utente si è disconesso, partita annullata");
+  alert("un utente si è disconnesso, partita annullata");
   setTimeout(() => {
     window.location.href = pagina_game;
   }, 5000);
@@ -164,8 +190,15 @@ b_listutenti.onclick = async () => {
 
 n_listpartite.onclick = async () => {
   let partite = await GetPartite();
-  //console.log(partite.games);
+  console.log(partite);
   partitemodal.innerHTML = render_partite(partite.games);
+  let buttons = document.querySelectorAll(".join");
+  buttons.forEach((b) => {
+    b.onclick = () => {
+      room = b.value;
+      socket.emit("spectate", b.value);
+    };
+  });
 };
 
 b_createRoom.onclick = () => {
@@ -180,6 +213,12 @@ logout.onclick = () => {
   cookies.set("username", "");
   cookies.set("password", "");
   location.href = "/Progetto/login.html";
+};
+
+b_back.onclick = () => {
+  b_back.classList.add("d-none");
+  socket.emit("quit watch", room);
+  window.location.href = pagina_game;
 };
 
 //https://uiverse.io/Navarog21/ordinary-rat-19 usare questo bottone bellissimo
@@ -207,11 +246,8 @@ function FindWinner(list_poits) {
     return [[]];
   }
 }
-/*tavolo_button.onclick = () => {
-  let modal = document.getElementById("resultmodal");
-  
-  myModal.show();
 
+tavolo_button.onclick = () => {
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
   div_prepartita.classList.add("d-none");
@@ -260,12 +296,18 @@ function FindWinner(list_poits) {
   modal.addEventListener("hidden.bs.modal", (event) => {
     window.location.href = "/Progetto/pagina_principale.html";
   });
-};*/
+};
 
 function tavolo(hand, users, briscola) {
   //console.log(users);
   b_startgame.classList.add("d-none");
-  let user_card = render_playerCard(hand);
+  let user_card;
+  if (hand === "") {
+    user_card = render_backhand();
+  } else {
+    user_card = render_playerCard(hand);
+  }
+
   let htmls = render_tavolo(users, briscola);
   //console.log(htmls);
   if (htmls.length === 1) {
@@ -280,7 +322,7 @@ function tavolo(hand, users, briscola) {
   } else {
     giocatore1.innerHTML = user_card;
     div_briscola.innerHTML = htmls[0];
-    deck.innerHTML = htmls[1];
+    deck.innerHTML = deck.innerHTML + htmls[1];
     giocatore2.innerHTML = htmls[2];
     if (htmls.length === 5) {
       giocatore3.innerHTML = htmls[3];
@@ -295,6 +337,7 @@ function click_carte() {
   carte_giocatore.forEach((carta) => {
     carta.addEventListener("click", () => {
       //console.log(carta);
+      let carta_src = carta.src;
       let path = carta.src.split("/");
       let src = path[path.length - 1];
       let card = hand.find(
@@ -306,6 +349,7 @@ function click_carte() {
         1,
       );
       socket.emit("update board", { room: room, card: card });
+
       giocatore1.innerHTML = render_playerCard(hand);
       setTimeout(() => {
         turn_find.innerHTML = "";

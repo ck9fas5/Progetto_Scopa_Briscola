@@ -7,6 +7,8 @@ import {
   render_tavolo_scopa,
   render_board_scopa,
   render_playerCard,
+  render_vittoria,
+  render_carta,
 } from "../../src/render.js";
 
 const div_prepartita = document.getElementById("pre-game");
@@ -22,12 +24,16 @@ const button_tavolo = document.getElementById("tavolo");
 const div_game = document.getElementById("game");
 const b_startgame = document.getElementById("startgame");
 const turn = document.getElementById("turn");
-
+const gioca_ancora = document.getElementById("gioca_ancora");
+const abbandona = document.getElementById("principale");
+const modal = document.getElementById("resultmodal");
+const myModal = new bootstrap.Modal(modal, {});
 const giocatore1 = document.getElementById("giocatore_principale");
 const giocatore2 = document.getElementById("giocatore2");
 const giocatore3 = document.getElementById("giocatore3");
 const giocatore4 = document.getElementById("giocatore4");
 const deck = document.getElementById("deck");
+const cerca = document.getElementById("cerca");
 
 const link_image = "../assets/card/";
 let hand;
@@ -51,6 +57,13 @@ let socket = io();
   }
 })();
 
+socket.on("quit", () => {
+  alert("un utente si è disconnesso, partita annullata");
+  setTimeout(() => {
+    window.location.href = "../../pagina_principale.html";
+  }, 5000);
+});
+
 socket.on("invited", (utente) => {
   //console.log(utente);
   //console.log(render_alert(utente));
@@ -65,6 +78,16 @@ socket.on("invited", (utente) => {
     socket.emit("join games", utente.room);
   };
 });
+
+gioca_ancora.onclick = () => {
+  socket.emit("reset", room);
+  socket.emit("start game scopa", room);
+};
+
+abbandona.onclick = () => {
+  socket.emit("quit watch", room);
+  window.location.href = "../../pagina_principale.html";
+};
 
 socket.on("join user", (list_user) => {
   b_startgame.disabled = false;
@@ -86,11 +109,16 @@ socket.on("updatescopa", (cards) => {
   let html = render_board_scopa(cards);
   deck.innerHTML = html;
   carte_terra = cards;
-  click_carte();
 });
 
 socket.on("fine partita", (punti) => {
+  let html = render_board_scopa([]);
   console.log(punti);
+  deck.innerHTML = html;
+  let vittoria = render_vittoria(punti);
+  myModal.show();
+  const vit = document.getElementById("vittoria");
+  vit.innerHTML = vittoria;
 });
 
 function tavolo(hand, users, carte_terra) {
@@ -142,6 +170,9 @@ function fine_turno(
   carta,
   t,
 ) {
+  console.log(hand, carte_prese, carte_terra, carta_selezionata, carta, t);
+  let html = render_carta(carte_terra, carta_selezionata);
+  deck.innerHTML = html;
   let p;
   turn.innerHTML = "";
   turn.classList.remove("gradiant");
@@ -155,30 +186,37 @@ function fine_turno(
       );
       carte_terra.splice(index, 1);
     });
+    let c = calcola_path(carta);
+    hand.forEach((carta) => {
+      if (carta.path === c) {
+        carte_prese.push(carta);
+      }
+    });
   } else if (t == "drop") {
     carte_terra.push(carta_selezionata);
+    console.log(carte_terra);
     p = false;
   }
   let car;
   let c = calcola_path(carta);
   hand.forEach((carta, i) => {
     if (carta.path === c) {
-      carte_prese.push(carta);
       car = i;
     }
   });
   hand.splice(car, 1);
   console.log(hand);
-  socket.emit("end turn scopa", {
-    room: room,
-    card: carte_terra,
-    carte_prese: carte_prese,
-    hand: hand,
-    preso: p,
-  });
+  setTimeout(() => {
+    socket.emit("end turn scopa", {
+      room: room,
+      card: carte_terra,
+      carte_prese: carte_prese,
+      hand: hand,
+      preso: p,
+    });
+  }, 2000);
 
   tavolo(hand, users, carte_terra);
-  click_carte();
 }
 
 function somme(array, targetSum) {
@@ -211,28 +249,36 @@ function somme(array, targetSum) {
 }
 
 async function click_carte() {
+  let carte_prese = [];
   const carte_giocatore = document.querySelectorAll(".carte_giocatore");
   const carte_a_terra = document.querySelectorAll(".carte_terra");
   const drop = document.querySelector(".droppa");
+  turn.classList.remove("shake");
   //console.log(carte_a_terra);
-  let carte_prese = [];
   carte_giocatore.forEach((carta) => {
     carta.addEventListener("click", () => {
+      carte_giocatore.forEach((card) => {
+        card.classList.remove("hover");
+      });
       carta.classList.add("hover");
       let carta_selezionata = trasforma(hand, carta);
       console.log(carta_selezionata);
+      console.log(carte_a_terra);
       carte_a_terra.forEach((element) => {
         element.addEventListener("click", () => {
           element.classList.add("hover");
-          console.log(trasforma(carte_terra, element));
-          if (!carte_prese.includes(trasforma(carte_terra, element))) {
-            carte_prese.push(trasforma(carte_terra, element));
+          let c = trasforma(carte_terra, element);
+          if (
+            carte_prese.find((element) => c.id === element.id) === undefined
+          ) {
+            carte_prese.push(c);
           }
           console.log(carte_prese);
           let somma = 0;
           carte_prese.forEach((element) => {
             somma += element.number;
           });
+          console.log(somma);
           if (somma === carta_selezionata.number) {
             fine_turno(
               hand,
@@ -244,7 +290,10 @@ async function click_carte() {
             );
           } else if (somma > carta_selezionata.number) {
             element.classList.add("shake");
-            element.classList.remove("hover");
+            carte_a_terra.forEach((element) => {
+              element.classList.remove("hover");
+            });
+            carte_prese = [];
           }
         });
         drop.onclick = () => {
@@ -280,6 +329,7 @@ async function click_carte() {
             turn.classList.add("gradiant");
             turn.classList.add("shake");
           } else {
+            carte_prese = [];
             fine_turno(
               hand,
               carte_prese,
@@ -291,6 +341,19 @@ async function click_carte() {
           }
         };
       });
+      if (carte_a_terra.length === 0) {
+        drop.onclick = () => {
+          carte_prese = [];
+          fine_turno(
+            hand,
+            carte_prese,
+            carte_terra,
+            carta_selezionata,
+            carta,
+            "drop",
+          );
+        };
+      }
     });
   });
 }
@@ -320,6 +383,7 @@ socket.on("start turn scopa", () => {
 b_listutenti.onclick = async () => {
   let users = await getUsers(Cookies.get("username"));
   console.log(users);
+
   bodymodal.innerHTML = render_utenti(users.users);
   let buttons = document.querySelectorAll(".invite");
   buttons.forEach((b) => {
@@ -335,6 +399,15 @@ b_listutenti.onclick = async () => {
     };
   });
 };
+
+cerca.addEventListener("input", (event) => {
+  const cerca_utenti = event.target.value;
+  console.log(cerca_utenti);
+  const utenti_trovati = users.filter((user) =>
+    user.username.toLowerCase().includes(cerca_utenti.toLowerCase()),
+  );
+  bodymodal.innerHTML = render_utenti(utenti_trovati);
+});
 
 n_listpartite.onclick = async () => {
   let partite = await GetPartite();
@@ -358,62 +431,3 @@ logout.onclick = () => {
 
 //https://uiverse.io/Navarog21/ordinary-rat-19 usare questo bottone bellissimo
 //ciao <3
-
-button_tavolo.onclick = () => {
-  div_prepartita.classList.add("d-none");
-  div_game.classList.remove("d-none");
-  div_prepartita.classList.add("d-none");
-  div_game.classList.remove("d-none");
-  div_game.classList.add("d-block");
-  alert_invite.classList.remove("show");
-  alert_invite.classList.add("d-none");
-
-  let carte_terra = [
-    {
-      id: 37,
-      number: 6,
-      suit: "Bastoni",
-      path: "Progetto/assets/card/seiBastoni.png",
-    },
-    {
-      id: 3,
-      number: 4,
-      suit: "Spade",
-      path: "Progetto/assets/card/quattroSpade.png",
-    },
-    {
-      id: 4,
-      number: 3,
-      suit: "Spade",
-      path: "Progetto/assets/card/treSpade.png",
-    },
-    {
-      id: 39,
-      number: 8,
-      suit: "Bastoni",
-      path: "Progetto/assets/card/dBastoni.png",
-    },
-  ];
-  let h = [
-    {
-      id: 37,
-      number: 6,
-      suit: "Denari",
-      path: "Progetto/assets/card/seiDenari.png",
-    },
-    {
-      id: 38,
-      number: 7,
-      suit: "Bastoni",
-      path: "Progetto/assets/card/setteBastoni.png",
-    },
-    {
-      id: 40,
-      number: 9,
-      suit: "Bastoni",
-      path: "Progetto/assets/card/cBastoni.png",
-    },
-  ];
-  tavolo(h, users, carte_terra);
-  click_carte();
-};
