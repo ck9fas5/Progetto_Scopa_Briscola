@@ -64,7 +64,7 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
     let src = link_image + path[path.length - 1];
     html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
   });
-  html += `<button class="button btn-outline droppa" type="button">Tira</button> `;
+  html += `<button class="btn-outline droppa" type="button" disabled>Tira</button> `;
   list_html.push(html);
   html = "";
   carte_terra.forEach((element) => {
@@ -212,23 +212,25 @@ export const render_vittoria = (user) => {
   let html = "";
   user.forEach((element) => {
     html += template_punti
-      .replace("%username", element.user)
-      .replace("punti", element.punti);
+      .replace("%username", element.username)
+      .replace("%punti", element.punti);
   });
   return html;
 };
 
-export function render_carta(carte,carta){
+export function render_carta(carte, carta) {
   let html = "";
+  html += `<div class="row">`;
   carte.forEach((element) => {
     let path = element.path.split("/");
     let src = link_image + path[path.length - 1];
     //console.log(src);
-    html += `<img src="${src}" alt="carte" class="carte_terra" width="110px" height="155px">`;
+    html += `<div class="col"><img src="${src}" alt="carte" class="carte_terra" width="110px" height="155px"></div>`;
   });
+  html += `</div>`;
   let path = carta.path.split("/");
   let src = link_image + path[path.length - 1];
   //console.log(src);
-  html += `<div class="row"><img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px"></div>`;
+  html += `<div class="row"><div class="col">Carta giocata<img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px"></div></div>`;
   return html;
 }

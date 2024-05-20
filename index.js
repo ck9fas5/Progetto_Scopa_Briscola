@@ -113,7 +113,11 @@ app.get("/user_get/:usernam", async (req, res) => {
       id_user: us.user,
     };
   });
-  userss = userss.filter((us) => us.username !== req.params.usernam);
+
+  if (req.params.usernam !== "all") {
+    userss = userss.filter((us) => us.username !== req.params.usernam);
+  }
+
   //////console.log(users);
   res.json({ users: userss });
 });
@@ -206,12 +210,21 @@ io.on("connection", (socket) => {
     let sg = started_games.find((s) => s.room === room);
     let sr = started_round.find((s) => s.room === room);
     if (sg !== undefined) {
-      sg.spectetor.push(socket.id);
-      io.to(socket.id).emit("start watch", {
-        order: sr.order,
-        briscola: sg.briscola,
-        history: sg.list_turncard,
-      });
+      if (sg.type == "b") {
+        sg.spectetor.push(socket.id);
+        io.to(socket.id).emit("start watch", {
+          order: sr.order,
+          briscola: sg.briscola,
+          history: sg.list_turncard,
+        });
+      } else {
+        sg.spectetor.push(socket.id);
+        console.log(sg.spectetor);
+        io.to(socket.id).emit("start watch scopa", {
+          order: sg.order,
+          carte_terra: sg.card,
+        });
+      }
     }
   });
 
@@ -233,10 +246,16 @@ io.on("connection", (socket) => {
         if (room.users.length === 0) {
           db.elimina("Game", { id: room.room });
           if (started_games.find((sg) => sg.room === room.room) !== undefined) {
-            started_games.splice(
-              started_games.findIndex((g) => g.room === room.room),
-              1,
-            );
+            if (
+              started_games[
+                started_games.findIndex((g) => g.room === room.room)
+              ].type === "b"
+            ) {
+              started_games.splice(
+                started_games.findIndex((g) => g.room === room.room),
+                1,
+              );
+            }
             started_round.splice(
               started_round.findIndex((g) => g.room === room.room),
               1,
@@ -398,16 +417,28 @@ io.on("connection", (socket) => {
 
   socket.on("reset", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
-    sg.taken_card.forEach((is) => {
-      is.mazzo = [];
-      is.preso = false;
-    });
+    started_games.splice(
+      started_games.findIndex((s) => s.room === sg.room),
+      1,
+    );
     scopa = [];
   });
 
   socket.on("update scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
     io.to(sg.room).emit("updatescopa", game.card);
+    console.log(sg.spectetor, "dio");
+    sg.spectetor.forEach((s) => {
+      io.to(s).emit("updatescopa", game.card);
+    });
+  });
+
+  socket.on("update scopa2", (game) => {
+    let sg = started_games.find((s) => s.room === game.room);
+    io.to(sg.room).emit("updatescopa2", {
+      carte: game.carte,
+      carta: game.carta,
+    });
   });
 
   //gestione partita di scopa
@@ -420,6 +451,7 @@ io.on("connection", (socket) => {
     started_games.push(sg);
     //console.log(sg, sr);
     let carte_terra = sg.deck.slice(0, 4);
+    sg.card = carte_terra;
     sg.deck.splice(0, 4);
     sg.order.forEach((element) => {
       let hands = sg.deck.slice(0, 3);
@@ -437,7 +469,10 @@ io.on("connection", (socket) => {
   socket.on("end turn scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
     let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
-    user.mazzo.push(...game.carte_prese);
+    if (game.carte_prese.length > 0) {
+      user.mazzo.push(...game.carte_prese);
+    }
+    sg.card = game.card;
     user.preso = game.preso;
     if (user.preso === true) {
       ultimi = user.user;
@@ -449,7 +484,10 @@ io.on("connection", (socket) => {
     }
     sg.taken_card.forEach((us) => {
       us.mazzo.forEach((element) => {
-        if (carte_scopa.find((e) => e.id === element.id) === undefined) {
+        if (
+          carte_scopa.find((e) => e.id === element.id) === undefined &&
+          element !== ""
+        ) {
           carte_scopa.push(element);
         }
       });
@@ -468,6 +506,9 @@ io.on("connection", (socket) => {
       });
     }
     io.to(sg.room).emit("updatescopa", game.card);
+    sg.spectetor.forEach((s) => {
+      io.to(s).emit("updatescopa", game.card);
+    });
     sg.index += 1;
     if (sg.index === sg.order.length) {
       sg.index = 0;
@@ -482,21 +523,22 @@ io.on("connection", (socket) => {
         scopa.find((u) => u.user === user.user).punteggio += 1;
       }
     }
-    console.log(carte_scopa, 222);
+    console.log(carte_scopa, carte_scopa.length, 222);
     if (carte_scopa.length + game.card.length === 40) {
       let punti_giocatore = [];
       if (game.card.length !== 0) {
         let ultimo = sg.taken_card.find((u) => u.user === ultimi);
-        console.log(ultimo);
         ultimo.mazzo.push(...game.card);
         game.card = [];
       }
+      console.log(users_socket, "DS");
       sg.taken_card.forEach((element) => {
+        let u = users_socket.find((use) => use.socket_id === element.user);
         length_card.push({ num: element.mazzo.length, user: element.user });
-        punti.push(punteggi_scopa(element.mazzo, element.user));
+        punti.push(punteggi_scopa(element.mazzo, element.user, u));
       });
       punti.forEach((element) => {
-        punti_giocatore.push({ punti: 0, user: element.user });
+        punti_giocatore.push({ punti: 0, user: element.id });
       });
       console.log(punti, 4444);
       let p_primiera = 0; //calcolo per sapere chi vince la primiera
@@ -504,9 +546,10 @@ io.on("connection", (socket) => {
       punti.forEach((element) => {
         if (element.primiera > p_primiera) {
           p_primiera = element.primiera;
-          user_primiera = element.user;
+          user_primiera = element.id;
         }
       });
+      console.log(user_primiera, "primiera");
       let p_denari = 0; //calcolo per sapere chi vince i denari
       let user_denari = "";
       punti.forEach((element) => {
@@ -514,9 +557,10 @@ io.on("connection", (socket) => {
           user_denari = "";
         } else if (element.denari.length > p_denari) {
           p_denari = element.denari.length;
-          user_denari = element.user;
+          user_denari = element.id;
         }
       });
+      console.log(user_denari, "denari");
       let p_carte = 0; //calcolo per sapere chi vince le carte
       let user_carte = "";
       console.log(length_card, "e");
@@ -530,24 +574,25 @@ io.on("connection", (socket) => {
       });
 
       punti.forEach((element) => {
-        if (element.user === user_primiera) {
+        if (element.id === user_primiera) {
           punti_giocatore.find((el) => el.user === user_primiera).punti += 1;
           console.log("primiera:", user_primiera);
         }
-        if (element.user === user_denari) {
+        if (element.id === user_denari) {
           punti_giocatore.find((el) => el.user === user_denari).punti += 1;
           console.log("denari:", user_denari);
         }
         if (element.user === user_carte) {
-          punti_giocatore.find((el) => el.user === user_carte).punti += 1;
-          console.log("carte:", user_carte);
+          let user_carte1 = punti.find((us) => us.user === user_carte);
+          punti_giocatore.find((el) => el.user === user_carte1.id).punti += 1;
+          console.log("carte:", user_carte1);
         }
         if (element.sette_bello === true) {
-          punti_giocatore.find((el) => el.user === element.user).punti += 1;
-          console.log("sette bello:", element.user);
+          punti_giocatore.find((el) => el.user === element.id).punti += 1;
+          console.log("sette bello:", element.id);
         }
         if (scopa.find((u) => u.user === element.user) !== undefined) {
-          punti_giocatore.find((el) => el.user === element.user).punti +=
+          punti_giocatore.find((el) => el.user === element.id).punti +=
             scopa.find((u) => u.user === element.user).punteggio;
         }
       });
@@ -575,7 +620,9 @@ async function SetUpGameScopa(room) {
     room: room.room,
     deck: deck,
     taken_card: taken_card,
+    card: [],
     order: order,
+    spectetor: [],
     index: index,
   }; //crea oggetto sg (started games) il quale contiene tutte gli attributo di una partita come
   // il mazzo, gli utenti, i mazzetti
@@ -655,7 +702,7 @@ function calcola_primiera(carte) {
   return punti_primiera;
 }
 
-function punteggi_scopa(carte_giocatore, user) {
+function punteggi_scopa(carte_giocatore, user, u) {
   let sette_bello = false;
   let Denari = [];
   let primiera = calcola_primiera(carte_giocatore);
@@ -670,6 +717,7 @@ function punteggi_scopa(carte_giocatore, user) {
 
   return {
     user: user,
+    id: u.user,
     sette_bello: sette_bello,
     denari: Denari,
     primiera: primiera,
