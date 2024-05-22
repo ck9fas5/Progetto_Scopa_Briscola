@@ -242,6 +242,10 @@ io.on("connection", (socket) => {
       if (room !== undefined) {
         //console.log(room.users.indexOf(socket.id))
         room.users.splice(room.users.indexOf(socket.id), 1);
+        carte_scopa = [];
+        punteggio = 0;
+        scopa = [];
+        punti = [];
         socket.to(room.room).emit("quit");
         if (room.users.length === 0) {
           db.elimina("Game", { id: room.room });
@@ -416,20 +420,25 @@ io.on("connection", (socket) => {
   });
 
   socket.on("reset", (game) => {
-    let sg = started_games.find((s) => s.room === game.room);
-    started_games.splice(
-      started_games.findIndex((s) => s.room === sg.room),
-      1,
-    );
+    if (game.punti.find((el) => el.punti === 11) !== undefined) {
+      started_games.splice(
+        started_games.findIndex((g) => g.room === game.room),
+        1,
+      );
+    }
+    punteggio = 0;
+    length_card = [];
+    carte_scopa = [];
     scopa = [];
+    socket.emit("start game scopa", game.room);
   });
 
   socket.on("update scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
-    io.to(sg.room).emit("updatescopa", game.card);
-    console.log(sg.spectetor, "dio");
+    console.log("f");
+    io.to(sg.room).emit("updatescopa", { card: game.card, scopa: scopa });
     sg.spectetor.forEach((s) => {
-      io.to(s).emit("updatescopa", game.card);
+      io.to(s).emit("updatescopa", { card: game.card, scopa: scopa });
     });
   });
 
@@ -492,6 +501,23 @@ io.on("connection", (socket) => {
         }
       });
     });
+
+    if (game.card.length === 0 && game.preso === true) {
+      if (scopa.find((u) => u.user === user.user) === undefined) {
+        scopa.push({
+          punteggio: punteggio + 1,
+          user: user.user,
+          carta: [game.carta_presa],
+        });
+      } else {
+        scopa.find((u) => u.user === user.user).punteggio += 1;
+        scopa.find((u) => u.user === user.user).carta.push(game.carta_presa);
+      }
+    }
+    io.to(sg.room).emit("updatescopa", { card: game.card, scopa: scopa });
+    sg.spectetor.forEach((s) => {
+      io.to(s).emit("updatescopa", { card: game.card, scopa: scopa });
+    });
     if (l.length === 2) {
       l = [];
       sg.order.forEach((u, indi) => {
@@ -505,24 +531,13 @@ io.on("connection", (socket) => {
         }
       });
     }
-    io.to(sg.room).emit("updatescopa", game.card);
-    sg.spectetor.forEach((s) => {
-      io.to(s).emit("updatescopa", game.card);
-    });
+
     sg.index += 1;
     if (sg.index === sg.order.length) {
       sg.index = 0;
       io.to(sg.order[0]).emit("start turn scopa");
     }
     io.to(sg.order[sg.index]).emit("start turn scopa");
-
-    if (game.card.length === 0 && game.preso === true) {
-      if (scopa.find((u) => u.user === user.user) === undefined) {
-        scopa.push({ punteggio: punteggio + 1, user: user.user });
-      } else {
-        scopa.find((u) => u.user === user.user).punteggio += 1;
-      }
-    }
     console.log(carte_scopa, carte_scopa.length, 222);
     if (carte_scopa.length + game.card.length === 40) {
       let punti_giocatore = [];
@@ -597,7 +612,12 @@ io.on("connection", (socket) => {
         }
       });
       carte_scopa = [];
-      io.to(sg.room).emit("fine partita", punti_giocatore);
+      io.to(sg.room).emit("fine partita", {
+        punti: punti_giocatore,
+        categorie: punti,
+        scope: scopa,
+        carte: length_card,
+      });
     }
   });
 });

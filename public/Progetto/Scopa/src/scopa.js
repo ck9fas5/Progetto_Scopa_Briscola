@@ -9,11 +9,13 @@ import {
   render_playerCard,
   render_vittoria,
   render_carta,
+  render_scope,
 } from "../../src/render.js";
 
 const div_prepartita = document.getElementById("pre-game");
 const div_waiting = document.getElementById("waiting");
 const b_listutenti = document.getElementById("utenti_connessi");
+b_listutenti.disabled = true;
 const b_createRoom = document.getElementById("createroom");
 const n_listpartite = document.getElementById("partite_in_corso");
 const alert_invite = document.getElementById("alert_invite");
@@ -24,16 +26,18 @@ const button_tavolo = document.getElementById("tavolo");
 const div_game = document.getElementById("game");
 const b_startgame = document.getElementById("startgame");
 const turn = document.getElementById("turn");
+const div_creategame = document.getElementById("creategame");
 const gioca_ancora = document.getElementById("gioca_ancora");
 const abbandona = document.getElementById("principale");
 const modal = document.getElementById("resultmodal");
 const myModal = new bootstrap.Modal(modal, {});
 const giocatore1 = document.getElementById("giocatore_principale");
 const giocatore2 = document.getElementById("giocatore2");
-const giocatore3 = document.getElementById("giocatore3");
-const giocatore4 = document.getElementById("giocatore4");
+const scope = document.getElementById("giocatore3");
 const deck = document.getElementById("deck");
 const cerca = document.getElementById("cerca");
+const div_drop = document.getElementById("pulsante");
+const div_spinner = document.getElementById("spinner");
 
 const link_image = "../assets/card/";
 let hand;
@@ -41,6 +45,7 @@ let carte_terra;
 let room = "";
 let users = [];
 let lista = [];
+let punteggi = [];
 
 let socket = io();
 (async function () {
@@ -81,8 +86,7 @@ socket.on("invited", (utente) => {
 });
 
 gioca_ancora.onclick = () => {
-  socket.emit("reset", room);
-  socket.emit("start game scopa", room);
+  socket.emit("reset", { punti: punteggi, room: room });
 };
 
 abbandona.onclick = () => {
@@ -100,17 +104,24 @@ socket.on("join user", (list_user) => {
 });
 
 socket.on("draw card", (card) => {
+  div_spinner.classList.remove("d-none");
   hand = card.card;
-  giocatore1.innerHTML =
-    render_playerCard(hand) +
-    `<button class="button btn-outline droppa" type="button">Tira</button> `;
+  giocatore1.innerHTML = render_playerCard(hand);
+  div_spinner.classList.add("d-none");
 });
 
 socket.on("updatescopa", (cards) => {
   console.log(cards);
-  let html = render_board_scopa(cards);
+  let html = render_board_scopa(cards.card);
   deck.innerHTML = html;
-  carte_terra = cards;
+  carte_terra = cards.card;
+  if (cards.scopa.length > 0) {
+    let html2 = ``;
+    cards.scopa.forEach((element) => {
+      html2 += render_scope(element.carta);
+    });
+    scope.innerHTML = html2;
+  }
 });
 
 socket.on("updatescopa2", (cards) => {
@@ -142,21 +153,90 @@ socket.on("fine partita", async (punti) => {
   deck.innerHTML = html;
   users = await getUsers("all");
   let user = [];
-  punti.forEach((element) => {
+  punti.punti.forEach((element) => {
     if (user.find((u) => u.id_user === element.user) === undefined) {
       user.push(users.users.find((u) => u.id_user === element.user));
     }
   });
-  let lista = [];
   console.log(user);
   console.log(users.users);
-  user.forEach((element, i) => {
-    lista.push({ username: element.username, punti: punti[i].punti });
+  let carte = [];
+  let scp = [];
+  punti.carte.forEach((e) => {
+    if (punti.categorie.find((u) => u.user === e.user) !== undefined) {
+      carte.push({
+        carte: punti.carte.find((u) => u.user === e.user).num,
+        id: punti.categorie.find((u) => u.user === e.user).id,
+      });
+    }
   });
-  let vittoria = render_vittoria(lista);
+  punti.scope.forEach((e) => {
+    if (punti.categorie.find((u) => u.user === e.user) !== undefined) {
+      scp.push({
+        scope: punti.scope.find((u) => u.user === e.user).punteggio,
+        id: punti.categorie.find((u) => u.user === e.user).id,
+      });
+    }
+  });
+  console.log(scp);
+  console.log(carte);
+  let sc = 0;
+  user.forEach((element) => {
+    if (
+      punteggi.length === 0 ||
+      punteggi.find((el) => el.id_user === element.id_user) === undefined
+    ) {
+      if (scp.find((u) => u.id === element.id_user) !== undefined) {
+        sc = scp.find((u) => u.id === element.id_user).scope;
+      }
+      punteggi.push({
+        username: element.username,
+        punti: punti.punti.find((u) => u.user === element.id_user).punti,
+        denari: punti.categorie.find((u) => u.id === element.id_user).denari
+          .length,
+        primiera: punti.categorie.find((u) => u.id === element.id_user)
+          .primiera,
+        scope: sc,
+        carte: carte.find((u) => element.id_user === u.id).carte,
+        sette_bello: punti.categorie.find((u) => u.id === element.id_user)
+          .sette_bello,
+      });
+    } else {
+      if (scp.find((u) => u.id === element.id_user) !== undefined) {
+        sc = scp.find((u) => u.id === element.id_user).scope;
+      }
+      let persona = user.find((el) => el.id_user === element.id_user);
+      console.log(persona);
+      (persona.punti += punti.punti.find(
+        (u) => u.user === element.id_user,
+      ).punti),
+        (persona.denari = punti.categorie.find(
+          (u) => u.id === element.id_user,
+        ).denari.length);
+      persona.primiera = punti.categorie.find(
+        (u) => u.id === element.id_user,
+      ).primiera;
+      (persona.carte = carte.find((u) => element.id_user === u.id).carte),
+        (persona.scope = sc);
+      persona.sette_bello = punti.categorie.find(
+        (u) => u.id === element.id_user,
+      ).sette_bello;
+    }
+  });
+  let vittoria = render_vittoria(punteggi);
   myModal.show();
   const vit = document.getElementById("vittoria");
   vit.innerHTML = vittoria;
+  let secondi = 5;
+  const countdownInterval = setInterval(() => {
+    if (secondi > 0) {
+      document.getElementById("countdown").innerHTML = secondi;
+      secondi -= 1;
+    } else {
+      clearInterval(countdownInterval);
+      gioca_ancora.click();
+    }
+  }, 1000);
 });
 
 function tavolo(hand, users, carte_terra) {
@@ -171,16 +251,12 @@ function tavolo(hand, users, carte_terra) {
       div_game.classList.add("d-none");
       alert_invite.innerHTML = htmls[0].text;
     }
-  } else if (htmls.length === 3) {
+  } else if (htmls.length === 4) {
     //console.log(htmls[0]);
     giocatore1.innerHTML = htmls[0];
-    deck.innerHTML = htmls[1];
-    giocatore2.innerHTML = htmls[2];
-  } else if (htmls.length === 5) {
-    giocatore1.innerHTML = htmls[0];
-    deck.innerHTML = htmls[1];
-    giocatore3.innerHTML = htmls[3];
-    giocatore4.innerHTML = htmls[4];
+    div_drop.innerHTML = htmls[1];
+    deck.innerHTML = htmls[2];
+    giocatore2.innerHTML = htmls[3];
   }
 }
 
@@ -200,14 +276,7 @@ function trasforma(lista_carte, carta) {
   return elemento;
 }
 
-function fine_turno(
-  hand,
-  carte_prese,
-  carte_terra,
-  carta_selezionata,
-  carta,
-  t,
-) {
+function fine_turno(hand, carte_prese, carte_terra, carta_selezionata, t) {
   let p;
   turn.innerHTML = "";
   turn.classList.remove("gradiant");
@@ -226,10 +295,9 @@ function fine_turno(
       );
       carte_terra.splice(index, 1);
     });
-    let c = calcola_path(carta);
-    hand.forEach((carta) => {
-      if (carta.path === c) {
-        carte_prese.push(carta);
+    hand.forEach((cart) => {
+      if (cart.path === carta_selezionata.path) {
+        carte_prese.push(cart);
       }
     });
   } else if (t == "drop") {
@@ -238,24 +306,36 @@ function fine_turno(
     p = false;
   }
   let car;
-  let c = calcola_path(carta);
-  hand.forEach((carta, i) => {
-    if (carta.path === c) {
+  hand.forEach((cart, i) => {
+    if (cart.path === carta_selezionata.path) {
       car = i;
     }
   });
   hand.splice(car, 1);
   console.log(hand);
-  setTimeout(() => {
+  if (t === "prese") {
+    setTimeout(() => {
+      socket.emit("end turn scopa", {
+        room: room,
+        card: carte_terra,
+        carte_prese: carte_prese,
+        hand: hand,
+        carta_presa: carta_selezionata,
+        preso: p,
+      });
+      tavolo(hand, users, carte_terra);
+    }, 2000);
+  } else {
     socket.emit("end turn scopa", {
       room: room,
       card: carte_terra,
       carte_prese: carte_prese,
       hand: hand,
+      carta_presa: "",
       preso: p,
     });
     tavolo(hand, users, carte_terra);
-  }, 2000);
+  }
 }
 
 function somme(array, targetSum) {
@@ -292,6 +372,7 @@ async function click_carte() {
   const carte_giocatore = document.querySelectorAll(".carte_giocatore");
   const carte_a_terra = document.querySelectorAll(".carte_terra");
   const drop = document.querySelector(".droppa");
+  let carta_selezionata;
   drop.disabled = false;
   drop.classList.add("button");
   turn.classList.remove("shake");
@@ -299,13 +380,16 @@ async function click_carte() {
   carte_giocatore.forEach((carta) => {
     carta.addEventListener("click", () => {
       carte_prese = [];
+      carta_selezionata = "";
       carte_giocatore.forEach((card) => {
         card.classList.remove("hover");
       });
       carta.classList.add("hover");
-      let carta_selezionata = trasforma(hand, carta);
+      carta_selezionata = trasforma(hand, carta);
       console.log(carta_selezionata);
       console.log(carte_a_terra);
+      console.log(carte_terra);
+      console.log(carta);
       carte_a_terra.forEach((element) => {
         element.addEventListener("click", () => {
           element.classList.add("hover");
@@ -321,13 +405,14 @@ async function click_carte() {
             somma += element.number;
           });
           console.log(somma);
+          console.log(carta_selezionata.number);
           if (somma === carta_selezionata.number) {
+            console.log(carta);
             fine_turno(
               hand,
               carte_prese,
               carte_terra,
-              carta_selezionata, //da ,mettere l'elemento di carte_prese
-              carta,
+              carta_selezionata,
               "prese",
             );
           } else if (somma > carta_selezionata.number) {
@@ -379,7 +464,6 @@ async function click_carte() {
               carte_prese,
               carte_terra,
               carta_selezionata,
-              carta,
               "drop",
             );
           }
@@ -390,14 +474,7 @@ async function click_carte() {
           drop.disabled = true;
           drop.classList.remove("button");
           carte_prese = [];
-          fine_turno(
-            hand,
-            carte_prese,
-            carte_terra,
-            carta_selezionata,
-            carta,
-            "drop",
-          );
+          fine_turno(hand, carte_prese, carte_terra, carta_selezionata, "drop");
         };
       }
     });
@@ -405,6 +482,7 @@ async function click_carte() {
 }
 
 socket.on("start scopa", (istance) => {
+  div_creategame.classList.add("d-none");
   div_waiting.classList.add("d-none");
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
@@ -469,6 +547,8 @@ n_listpartite.onclick = async () => {
 
 b_createRoom.onclick = () => {
   b_createRoom.disabled = true;
+  b_listutenti.disabled = false;
+  div_creategame.classList.remove("d-none");
   let hash = CryptoJS.SHA256(socket.id);
   let hashInHex = hash.toString(CryptoJS.enc.Hex);
   room = hashInHex;
@@ -476,8 +556,8 @@ b_createRoom.onclick = () => {
 };
 
 logout.onclick = () => {
-  cookies.set("username", "");
-  cookies.set("password", "");
+  Cookies.set("username", "");
+  Cookies.set("password", "");
   location.href = "/Progetto/login.html";
 };
 

@@ -18,13 +18,14 @@ const pagina_game = "/Progetto/Briscola/briscola.html";
 const pagina_princi = "/Progetto/pagina_principale.html";
 const div_prepartita = document.getElementById("pre-game");
 const div_waiting = document.getElementById("waiting");
+const div_creategame = document.getElementById("creategame");
 const div_game = document.getElementById("game");
-const container = document.querySelector("#game");
 
 const play_div = document.getElementById("play_div");
 const win_div = document.getElementById("win_div");
 
 const b_listutenti = document.getElementById("utenti_connessi");
+b_listutenti.disabled = true;
 const b_createRoom = document.getElementById("createroom");
 const n_listpartite = document.getElementById("partite_in_corso");
 const b_startgame = document.getElementById("startgame");
@@ -113,6 +114,7 @@ socket.on("start watch", (game) => {
 });
 
 socket.on("star", async (istance) => {
+  div_creategame.classList.add("d-none");
   div_waiting.classList.add("d-none");
   div_prepartita.classList.add("d-none");
   div_game.classList.remove("d-none");
@@ -214,6 +216,8 @@ n_listpartite.onclick = async () => {
 
 b_createRoom.onclick = () => {
   b_createRoom.disabled = true;
+  b_listutenti.disabled = false;
+  div_creategame.classList.remove("d-none");
   let hash = CryptoJS.SHA256(socket.id);
   let hashInHex = hash.toString(CryptoJS.enc.Hex);
   room = hashInHex;

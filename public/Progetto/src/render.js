@@ -64,8 +64,10 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
     let src = link_image + path[path.length - 1];
     html += `<img src="${src}" alt="carte" class="carte_giocatore" width="110px" height="155px">`;
   });
-  html += `<button class="btn-outline droppa" type="button" disabled>Tira</button> `;
   list_html.push(html);
+  list_html.push(
+    `<button class="btn-outline droppa" type="button" disabled>Tira</button> `,
+  );
   html = "";
   carte_terra.forEach((element) => {
     let path = element.path.split("/");
@@ -80,20 +82,6 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
       html += `<img class="" src="../assets/card/back.png" alt="carta" width="110px" height="155px">`;
     }
     list_html.push(html);
-  } else if (n.length === 4) {
-    html = "";
-
-    for (let i = 0; i < h; i++) {
-      html += `<img class="" src="../assets/card/back.png" alt="carta" width="110px" height="155px">`;
-    }
-    list_html.push(html);
-    for (let i = 0; i < 2; i++) {
-      html = "";
-      for (let i = 0; i < h + 1; i++) {
-        html += `<img class="immagine_ruotata" src="../assets/card/back.png" alt="carta" width="110px" height="155px">`;
-      }
-      list_html.push(html);
-    }
   } else {
     return [{ text: "ci sono troppi giocatori (si può giocare in 2 o in 4)" }];
   }
@@ -205,17 +193,40 @@ export const render_board_scopa = (cards) => {
 };
 
 export const render_vittoria = (user) => {
-  let template_punti = `<table>
-        <tr><th>Username</th><th>Punti</th></tr>
-        <tr><td>%username</td><td>%punti</td></tr>
-        </table>`;
+  console.log(user);
+  let template_punti = `
+        <tr><td><strong>%username</strong></td><td>%punti</td></tr>
+        <tr><td><strong>Primiera:</strong> %primiera</td></tr>
+        <tr><td><strong>Carte:</strong> %carte</td></tr>
+        <tr><td><strong>Denari:</strong> %denari</td></tr>
+        <tr><td><strong>Sette bello:</strong> %settebello</td></tr>
+        <tr><td><strong>Scope:</strong> %scope</td></tr>`;
   let html = "";
+  let sb = "NO";
   user.forEach((element) => {
+    if (element.sette_bello) {
+      sb = "SI";
+    }
     html += template_punti
       .replace("%username", element.username)
-      .replace("%punti", element.punti);
+      .replace("%punti", element.punti)
+      .replace("%primiera", element.primiera)
+      .replace("%carte", element.carte)
+      .replace("%denari", element.denari)
+      .replace("%scope", element.scope)
+      .replace("%settebello", sb);
+
+    if (element.punti === 11) {
+      html += `<tr><td>Vittoria</td></tr>`;
+    }
   });
-  return html;
+  console.log(html);
+  return (
+    `<table>
+        <tr><th>Username</th><th>Punti</th></tr>` +
+    html +
+    `</table>`
+  );
 };
 
 export function render_carta(carte, carta) {
@@ -232,5 +243,19 @@ export function render_carta(carte, carta) {
   let src = link_image + path[path.length - 1];
   //console.log(src);
   html += `<div class="row"><div class="col">Carta giocata<img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px"></div></div>`;
+  return html;
+}
+
+export function render_scope(carta) {
+  let html = "";
+  html += `<div class="row">`;
+  carta.forEach((element) => {
+    let path = element.path.split("/");
+    let src = link_image + path[path.length - 1];
+    //console.log(src);
+    html += `<div class="col"><img src="${src}" alt="carte" class="immagine_ruotata" width="110px" height="155px"></div>`;
+  });
+
+  html += `</div>`;
   return html;
 }
