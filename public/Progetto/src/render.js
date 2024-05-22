@@ -195,17 +195,21 @@ export const render_board_scopa = (cards) => {
 export const render_vittoria = (user) => {
   console.log(user);
   let template_punti = `
-        <tr><td><strong>%username</strong></td><td>%punti</td></tr>
+        <tr><td><strong><strong>Username:</strong> %username</strong></td></tr>
+        </td><td><strong>Punti:</strong> %punti</td></tr>
         <tr><td><strong>Primiera:</strong> %primiera</td></tr>
         <tr><td><strong>Carte:</strong> %carte</td></tr>
         <tr><td><strong>Denari:</strong> %denari</td></tr>
         <tr><td><strong>Sette bello:</strong> %settebello</td></tr>
         <tr><td><strong>Scope:</strong> %scope</td></tr>`;
+
   let html = "";
   let sb = "NO";
   user.forEach((element) => {
-    if (element.sette_bello) {
+    if (element.sette_bello === true) {
       sb = "SI";
+    } else {
+      sb = "NO";
     }
     html += template_punti
       .replace("%username", element.username)
@@ -221,12 +225,7 @@ export const render_vittoria = (user) => {
     }
   });
   console.log(html);
-  return (
-    `<table>
-        <tr><th>Username</th><th>Punti</th></tr>` +
-    html +
-    `</table>`
-  );
+  return `<table>` + html + `</table>`;
 };
 
 export function render_carta(carte, carta) {

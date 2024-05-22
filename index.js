@@ -479,7 +479,11 @@ io.on("connection", (socket) => {
     let sg = started_games.find((s) => s.room === game.room);
     let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
     if (game.carte_prese.length > 0) {
-      user.mazzo.push(...game.carte_prese);
+      game.carte_prese.forEach((card) => {
+        if (card !== "") {
+          user.mazzo.push(card);
+        }
+      });
     }
     sg.card = game.card;
     user.preso = game.preso;
@@ -542,11 +546,15 @@ io.on("connection", (socket) => {
     if (carte_scopa.length + game.card.length === 40) {
       let punti_giocatore = [];
       if (game.card.length !== 0) {
-        let ultimo = sg.taken_card.find((u) => u.user === ultimi);
-        ultimo.mazzo.push(...game.card);
+        game.card.forEach((element) => {
+          let ultimo = sg.taken_card.find((u) => u.user === ultimi);
+          if (element !== "") {
+            ultimo.mazzo.push(element);
+          }
+        });
         game.card = [];
       }
-      console.log(users_socket, "DS");
+
       sg.taken_card.forEach((element) => {
         let u = users_socket.find((use) => use.socket_id === element.user);
         length_card.push({ num: element.mazzo.length, user: element.user });
