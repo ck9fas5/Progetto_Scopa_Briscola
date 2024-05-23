@@ -72,7 +72,7 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
   carte_terra.forEach((element) => {
     let path = element.path.split("/");
     let src = link_image + path[path.length - 1];
-    html += `<img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px">`;
+    html += `<div class="col-auto"><img src="${src}" alt="carta" class="carte_terra" width="110px" height="155px"></div>`;
   });
 
   list_html.push(html);
@@ -195,13 +195,14 @@ export const render_board_scopa = (cards) => {
 export const render_vittoria = (user) => {
   console.log(user);
   let template_punti = `
-        <tr><td><strong><strong>Username:</strong> %username</strong></td></tr>
+         <tr class="bg-info"><td><strong><strong>Username:</strong> %username</strong></td></tr>
         </td><td><strong>Punti:</strong> %punti</td></tr>
         <tr><td><strong>Primiera:</strong> %primiera</td></tr>
         <tr><td><strong>Carte:</strong> %carte</td></tr>
         <tr><td><strong>Denari:</strong> %denari</td></tr>
         <tr><td><strong>Sette bello:</strong> %settebello</td></tr>
-        <tr><td><strong>Scope:</strong> %scope</td></tr>`;
+        <tr><td><strong>Scope:</strong> %scope</td></tr>
+        `;
 
   let html = "";
   let sb = "NO";
@@ -224,7 +225,6 @@ export const render_vittoria = (user) => {
       html += `<tr><td>Vittoria</td></tr>`;
     }
   });
-  console.log(html);
   return `<table>` + html + `</table>`;
 };
 

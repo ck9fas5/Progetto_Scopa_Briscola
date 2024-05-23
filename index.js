@@ -39,7 +39,7 @@ const GetCarte = async () => {
 };
 
 const FindUsername = (list_user, id) => {
-  //console.log(list_user);
+  ////console.log(list_user);
   return list_user.find((u) => u.id === id).username;
 };
 
@@ -54,7 +54,7 @@ app.use("/", express.static(path.join(__dirname, "public")));
 
 const server = http.createServer(app);
 server.listen(3000, () => {
-  ////console.log("- server running");
+  //////console.log("- server running");
 });
 const io = new socket.Server(server);
 
@@ -62,7 +62,7 @@ db.createTable();
 
 app.post("/login", async (req, res) => {
   let user = await db.checkLogin(req.body.username, req.body.password);
-  //////console.log(user);
+  ////////console.log(user);
   if (user) {
     res.json({ result: "ok" });
   } else {
@@ -73,7 +73,7 @@ app.post("/login", async (req, res) => {
 app.post("/singin", async (req, res) => {
   let user = await db.getting("User");
   JSON.stringify(user);
-  /*////console.log(
+  /*//////console.log(
     user.filter(
       (x) =>
         x.username === req.body.username && x.password === req.body.password,
@@ -85,7 +85,7 @@ app.post("/singin", async (req, res) => {
         x.username === req.body.username && x.password === req.body.password,
     ).length === 0
   ) {
-    //////console.log("d");
+    ////////console.log("d");
     let s = db.insert("User", {
       username: req.body.username,
       password: req.body.password,
@@ -93,7 +93,7 @@ app.post("/singin", async (req, res) => {
     });
     res.json({ result: "ok" });
   } else {
-    //////console.log("w");
+    ////////console.log("w");
     res.json({ result: "unauthorized" });
   }
 });
@@ -104,9 +104,9 @@ app.get("/card_get", async (req, res) => {
 });
 
 app.get("/user_get/:usernam", async (req, res) => {
-  console.log(req.params.usernam);
+  //console.log(req.params.usernam);
   let users = await GetUser("User");
-  ////console.log(users);
+  //////console.log(users);
   let userss = users_socket.map((us) => {
     return {
       username: FindUsername(users, us.user),
@@ -118,7 +118,7 @@ app.get("/user_get/:usernam", async (req, res) => {
     userss = userss.filter((us) => us.username !== req.params.usernam);
   }
 
-  //////console.log(users);
+  ////////console.log(users);
   res.json({ users: userss });
 });
 
@@ -126,13 +126,13 @@ app.get("/game_get", async (req, res) => {
   if (users_socket.length !== 0) {
     let partite = await GetPartite("Game");
     let users = await db.getting("User");
-    /*////console.log(partite);*/
-    /*////console.log(users);*/
+    /*//////console.log(partite);*/
+    /*//////console.log(users);*/
     let list_games = [];
     partite.forEach((gm, indi) => {
       let game = games.find((g) => g.room === gm.id);
       let user = [];
-      console.log(game);
+      //console.log(game);
       if (game !== undefined) {
         game.users.forEach((u, indi) => {
           user.push(
@@ -145,7 +145,7 @@ app.get("/game_get", async (req, res) => {
         list_games.push({ game: game, users: user });
       }
     });
-    ////console.log(list_games);
+    //////console.log(list_games);
     res.json({ games: list_games });
   }
 });
@@ -154,15 +154,15 @@ io.on("connection", (socket) => {
   //gestione accesso utente, invito utente, disconessione utente e unione ad una stanza
   socket.on("accesso", async (password, username) => {
     let users = await GetUser("User");
-    //console.log(users, password, username);
+    ////console.log(users, password, username);
     let user = users.find(
       (u) => u.password === password && u.username === username,
     );
-    //////console.log(user_);
+    ////////console.log(user_);
     if (user !== undefined) {
       users_socket.push({ user: user.id, socket_id: socket.id });
-      console.log(users_socket);
-      console.log("/n");
+      //console.log(users_socket);
+      //console.log("/n");
     }
   });
 
@@ -174,35 +174,35 @@ io.on("connection", (socket) => {
     } else {
       let room = games.find((g) => g.room === game);
       list_users = room.users;
-      //////console.log(list_users);
+      ////////console.log(list_users);
       list_users.push(socket.id);
-      //////console.log(games.indexOf(room));
+      ////////console.log(games.indexOf(room));
       games[games.indexOf(room)]["users"] = list_users;
       list_user2 = list_users.slice(0); //creo lista utenti senza il cretore della stanza perchè solo lui può iniziare la partita
       socket.broadcast
         .to(room.users[0])
         .emit("join user", list_user2.splice(0, 1));
     }
-    console.log(games);
-    //console.log("/n");
+    //console.log(games);
+    ////console.log("/n");
   });
 
   socket.on("invite user", async (utente) => {
-    //console.log(utente);
+    ////console.log(utente);
     let users = await GetUser("User");
     let senter_user = users_socket.find((us) => us.socket_id === socket.id);
     let invited_user = users_socket.find((us) => us.user === utente);
-    //console.log(invited_user);
-    //console.log(senter_user);
-    //console.log("");
+    ////console.log(invited_user);
+    ////console.log(senter_user);
+    ////console.log("");
     let room = games.find((g) => g.users.includes(senter_user.socket_id));
     if (room !== undefined) {
-      //console.log(room.room);
+      ////console.log(room.room);
       socket.broadcast.to(invited_user.socket_id).emit("invited", {
         username: FindUsername(users, senter_user.user),
         room: room.room,
       });
-      //console.log("/n");
+      ////console.log("/n");
     }
   });
 
@@ -219,7 +219,7 @@ io.on("connection", (socket) => {
         });
       } else {
         sg.spectetor.push(socket.id);
-        console.log(sg.spectetor);
+        //console.log(sg.spectetor);
         io.to(socket.id).emit("start watch scopa", {
           order: sg.order,
           carte_terra: sg.card,
@@ -229,9 +229,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    ////console.log(users_socket.find((us) => us.socket_id === socket.id));
+    //////console.log(users_socket.find((us) => us.socket_id === socket.id));
     if (users_socket.find((us) => us.socket_id === socket.id) !== undefined) {
-      ////console.log(users_socket[0].socket_id);
+      //////console.log(users_socket[0].socket_id);
       users_socket.splice(
         users_socket.indexOf(
           users_socket.find((us) => us.socket_id === socket.id),
@@ -240,7 +240,7 @@ io.on("connection", (socket) => {
       );
       let room = games.find((g) => g.users.includes(socket.id));
       if (room !== undefined) {
-        //console.log(room.users.indexOf(socket.id))
+        ////console.log(room.users.indexOf(socket.id))
         room.users.splice(room.users.indexOf(socket.id), 1);
         carte_scopa = [];
         punteggio = 0;
@@ -271,11 +271,11 @@ io.on("connection", (socket) => {
           );
         }
       }
-      console.log(games);
-      console.log(started_games);
-      console.log(started_round);
-      ////console.log(users_socket);
-      //console.log("/n");
+      //console.log(games);
+      //console.log(started_games);
+      //console.log(started_round);
+      //////console.log(users_socket);
+      ////console.log("/n");
     }
   });
 
@@ -288,7 +288,7 @@ io.on("connection", (socket) => {
     let sr = dati.sr;
     started_games.push(sg);
     started_round.push(sr);
-    //console.log(sg, sr);
+    ////console.log(sg, sr);
 
     sr.order.forEach((u, indi) => {
       let hands = sg.deck.slice(0, 3);
@@ -300,9 +300,9 @@ io.on("connection", (socket) => {
       });
     });
     io.to(sr.order[0]).emit("start_turn_briscola");
-    //console.log(started_games);
-    ////console.log(games);
-    //console.log("/n");
+    ////console.log(started_games);
+    //////console.log(games);
+    ////console.log("/n");
   });
 
   socket.on("end turn briscola", async (game) => {
@@ -311,24 +311,24 @@ io.on("connection", (socket) => {
     let sr = started_round.find((s) => s.room === game.room);
     if (sg !== undefined) {
       sr.index += 1;
-      //console.log(40 / sr.order.length, sg.list_turncard.length);
+      ////console.log(40 / sr.order.length, sg.list_turncard.length);
       if (sr.index === sr.order.length) {
         //controllo se è finita la mano
         sr.index = 0;
         sg.list_turncard.push(sr.card_played);
         let index_order = briscola.setOrder(sr, sg);
-        console.log(index_order);
-        ////console.log(sg.order);
+        //console.log(index_order);
+        //////console.log(sg.order);
         for (let i = 0; i < index_order; i++) {
           let posi = sr.order[0];
           sr.order.splice(0, 1);
           sr.order.push(posi);
         }
-        //console.log(sr.card_played);
+        ////console.log(sr.card_played);
         sg.taken_card[
           sg.taken_card.findIndex((user) => user.user === sr.order[0])
         ].mazzo.push(...sr.card_played);
-        //console.log(sg.taken_card);
+        ////console.log(sg.taken_card);
 
         sr.card_played = [];
         io.to(sg.room).emit("updateboard", {
@@ -348,8 +348,8 @@ io.on("connection", (socket) => {
             let ista = sg.taken_card.find((is) => is.user === u);
             let punti = briscola.PointBriscola(ista);
             ista["punti"] = punti;
-            console.log(punti);
-            //console.log(user.mazzo);
+            //console.log(punti);
+            ////console.log(user.mazzo);
           });
           let punteggi = sg.taken_card.map((is) => {
             return {
@@ -361,7 +361,7 @@ io.on("connection", (socket) => {
               punti: is.punti,
             };
           });
-          console.log(punteggi);
+          //console.log(punteggi);
           io.to(sg.room).emit("fine partita", punteggi);
           sg.spectetor.forEach((s) => {
             io.to(s).emit("fine partita", punteggi);
@@ -386,19 +386,19 @@ io.on("connection", (socket) => {
             }
           });
         }
-        console.log(started_games);
-        console.log(started_round);
+        //console.log(started_games);
+        //console.log(started_round);
       } else {
         //passaggio tutno al prossimo giocatore
         sr.order.forEach((u, indi) => {
-          //console.log(indi, sr.index);
+          ////console.log(indi, sr.index);
           if (indi === sr.index) {
             io.to(u).emit("start_turn_briscola");
           }
         });
       }
     }
-    ////console.log("");
+    //////console.log("");
   });
 
   socket.on("update board", (game) => {
@@ -419,23 +419,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("reset", (game) => {
-    if (game.punti.find((el) => el.punti === 11) !== undefined) {
-      started_games.splice(
-        started_games.findIndex((g) => g.room === game.room),
-        1,
-      );
-    }
-    punteggio = 0;
-    length_card = [];
-    carte_scopa = [];
-    scopa = [];
-    socket.emit("start game scopa", game.room);
-  });
-
   socket.on("update scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
-    console.log("f");
+    //console.log("f");
     io.to(sg.room).emit("updatescopa", { card: game.card, scopa: scopa });
     sg.spectetor.forEach((s) => {
       io.to(s).emit("updatescopa", { card: game.card, scopa: scopa });
@@ -450,15 +436,17 @@ io.on("connection", (socket) => {
     });
   });
 
-  //gestione partita di scopa
-  socket.on("start game scopa", async (game) => {
-    let room = games.find((g) => g.room === game);
+  const startGameScopa = async (gameRoom) => {
+    console.log(gameRoom, "E");
+    let room = games.find((g) => g.room === gameRoom);
     games[games.indexOf(room)]["state"] = true;
     let dati = await SetUpGameScopa(room);
-    console.log(dati);
+    //console.log(dati);
     let sg = dati.sg;
-    started_games.push(sg);
-    //console.log(sg, sr);
+    if (started_games.find((s) => s.room === sg.room) === undefined) {
+      started_games.push(sg);
+    }
+    console.log(sg);
     let carte_terra = sg.deck.slice(0, 4);
     sg.card = carte_terra;
     sg.deck.splice(0, 4);
@@ -473,7 +461,10 @@ io.on("connection", (socket) => {
       });
     });
     io.to(sg.order[0]).emit("start turn scopa");
-  });
+  };
+
+  //gestione partita di scopa
+  socket.on("start game scopa", startGameScopa);
 
   socket.on("end turn scopa", (game) => {
     let sg = started_games.find((s) => s.room === game.room);
@@ -542,7 +533,7 @@ io.on("connection", (socket) => {
       io.to(sg.order[0]).emit("start turn scopa");
     }
     io.to(sg.order[sg.index]).emit("start turn scopa");
-    console.log(carte_scopa, carte_scopa.length, 222);
+    //console.log(carte_scopa, carte_scopa.length, 222);
     if (carte_scopa.length + game.card.length === 40) {
       let punti_giocatore = [];
       if (game.card.length !== 0) {
@@ -563,7 +554,7 @@ io.on("connection", (socket) => {
       punti.forEach((element) => {
         punti_giocatore.push({ punti: 0, user: element.id });
       });
-      console.log(punti, 4444);
+      //console.log(punti, 4444);
       let p_primiera = 0; //calcolo per sapere chi vince la primiera
       let user_primiera = "";
       punti.forEach((element) => {
@@ -572,7 +563,7 @@ io.on("connection", (socket) => {
           user_primiera = element.id;
         }
       });
-      console.log(user_primiera, "primiera");
+      //console.log(user_primiera, "primiera");
       let p_denari = 0; //calcolo per sapere chi vince i denari
       let user_denari = "";
       punti.forEach((element) => {
@@ -583,10 +574,10 @@ io.on("connection", (socket) => {
           user_denari = element.id;
         }
       });
-      console.log(user_denari, "denari");
+      //console.log(user_denari, "denari");
       let p_carte = 0; //calcolo per sapere chi vince le carte
       let user_carte = "";
-      console.log(length_card, "e");
+      //console.log(length_card, "e");
       length_card.forEach((element) => {
         if (element.num === p_carte) {
           user_carte = "";
@@ -599,20 +590,20 @@ io.on("connection", (socket) => {
       punti.forEach((element) => {
         if (element.id === user_primiera) {
           punti_giocatore.find((el) => el.user === user_primiera).punti += 1;
-          console.log("primiera:", user_primiera);
+          //console.log("primiera:", user_primiera);
         }
         if (element.id === user_denari) {
           punti_giocatore.find((el) => el.user === user_denari).punti += 1;
-          console.log("denari:", user_denari);
+          //console.log("denari:", user_denari);
         }
         if (element.user === user_carte) {
           let user_carte1 = punti.find((us) => us.user === user_carte);
           punti_giocatore.find((el) => el.user === user_carte1.id).punti += 1;
-          console.log("carte:", user_carte1);
+          //console.log("carte:", user_carte1);
         }
         if (element.sette_bello === true) {
           punti_giocatore.find((el) => el.user === element.id).punti += 1;
-          console.log("sette bello:", element.id);
+          //console.log("sette bello:", element.id);
         }
         if (scopa.find((u) => u.user === element.user) !== undefined) {
           punti_giocatore.find((el) => el.user === element.id).punti +=
@@ -628,6 +619,25 @@ io.on("connection", (socket) => {
       });
     }
   });
+
+  socket.on("reset", (game) => {
+    console.log(game.room, "!23!");
+    if (game.punti.find((el) => el.punti === 11) !== undefined) {
+      started_games.splice(
+        started_games.findIndex((g) => g.room === game.room),
+        1,
+      );
+      socket.to(game.room).emit("quit");
+    } else {
+      punteggio = 0;
+      length_card = [];
+      carte_scopa = [];
+      scopa = [];
+      console.log(started_games, "£");
+      //socket.to(game.room).emit("start game scopa", game.room);
+      startGameScopa(game.room);
+    }
+  });
 });
 
 async function SetUpGameScopa(room) {
@@ -637,7 +647,6 @@ async function SetUpGameScopa(room) {
   briscola.shuffleArray(order);
 
   let deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
-
   briscola.shuffleArray(deck);
 
   let index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn

@@ -38,6 +38,7 @@ const deck = document.getElementById("deck");
 const cerca = document.getElementById("cerca");
 const div_drop = document.getElementById("pulsante");
 const div_spinner = document.getElementById("spinner");
+const ricarica = document.getElementById("ricarica");
 
 const link_image = "../assets/card/";
 let hand;
@@ -86,7 +87,12 @@ socket.on("invited", (utente) => {
 });
 
 gioca_ancora.onclick = () => {
+  myModal.hide();
+  ricarica.classList.remove("d-none");
+  let html = render_scope([]);
+  scope.innerHTML = html;
   socket.emit("reset", { punti: punteggi, room: room });
+  console.log(punteggi, room);
 };
 
 abbandona.onclick = () => {
@@ -158,8 +164,6 @@ socket.on("fine partita", async (punti) => {
       user.push(users.users.find((u) => u.id_user === element.user));
     }
   });
-  console.log(user);
-  console.log(users.users);
   let carte = [];
   let scp = [];
   punti.carte.forEach((e) => {
@@ -178,8 +182,6 @@ socket.on("fine partita", async (punti) => {
       });
     }
   });
-  console.log(scp);
-  console.log(carte);
   let sc = 0;
   user.forEach((element) => {
     if (
@@ -224,6 +226,8 @@ socket.on("fine partita", async (punti) => {
     }
   });
   let vittoria = render_vittoria(punteggi);
+  turn.innerHTML = "";
+  turn.classList.remove("gradiant");
   myModal.show();
   const vit = document.getElementById("vittoria");
   vit.innerHTML = vittoria;
@@ -240,6 +244,7 @@ socket.on("fine partita", async (punti) => {
 });
 
 function tavolo(hand, users, carte_terra) {
+  console.log("si");
   b_startgame.classList.add("d-none");
   let htmls = render_tavolo_scopa(hand, users, carte_terra);
   if (htmls.length === 1) {
@@ -482,6 +487,8 @@ async function click_carte() {
 }
 
 socket.on("start scopa", (istance) => {
+  console.log(istance);
+  ricarica.classList.add("d-none");
   div_creategame.classList.add("d-none");
   div_waiting.classList.add("d-none");
   div_prepartita.classList.add("d-none");
@@ -495,12 +502,15 @@ socket.on("start scopa", (istance) => {
   hand = istance.hand;
   carte_terra = istance.carte_terra;
   users = istance.order;
+  lista = [];
+  punteggi = [];
   tavolo(hand, users, carte_terra);
 });
 
 socket.on("start turn scopa", () => {
   turn.innerHTML = "Ѐ il tuo turno";
   turn.classList.add("gradiant");
+  console.log("32s");
   click_carte();
 });
 
