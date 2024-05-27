@@ -450,6 +450,9 @@ io.on("connection", (socket) => {
     let carte_terra = sg.deck.slice(0, 4);
     sg.card = carte_terra;
     sg.deck.splice(0, 4);
+    sg.taken_card.forEach((element) => {
+      element.mazzo = [];
+    });
     sg.order.forEach((element) => {
       let hands = sg.deck.slice(0, 3);
       sg.deck.splice(0, 3);
@@ -466,9 +469,10 @@ io.on("connection", (socket) => {
   //gestione partita di scopa
   socket.on("start game scopa", startGameScopa);
 
-  socket.on("end turn scopa", (game) => {
+  socket.on("end turn scopa", async (game) => {
     let sg = started_games.find((s) => s.room === game.room);
     let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
+    console.log(sg.taken_card[0].mazzo, "23c");
     if (game.carte_prese.length > 0) {
       game.carte_prese.forEach((card) => {
         if (card !== "") {
@@ -482,7 +486,7 @@ io.on("connection", (socket) => {
       ultimi = user.user;
     }
 
-    console.log(sg.taken_card);
+    console.log(sg.taken_card[0].mazzo);
     if (game.hand.length === 0) {
       l.push("w");
     }
@@ -617,6 +621,11 @@ io.on("connection", (socket) => {
         scope: scopa,
         carte: length_card,
       });
+      sg.taken_card.forEach((element) => {
+        element.mazzo = [];
+      });
+      sg.deck = await GetCarte();
+      briscola.shuffleArray(sg.deck);
     }
   });
 
@@ -629,10 +638,13 @@ io.on("connection", (socket) => {
       );
       socket.to(game.room).emit("quit");
     } else {
+      carte_scopa = [];
       punteggio = 0;
       length_card = [];
-      carte_scopa = [];
+      l = [];
+      punti = [];
       scopa = [];
+      ultimi = "";
       console.log(started_games, "£");
       //socket.to(game.room).emit("start game scopa", game.room);
       startGameScopa(game.room);

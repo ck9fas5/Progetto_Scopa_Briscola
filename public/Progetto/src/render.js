@@ -66,7 +66,7 @@ export const render_tavolo_scopa = (hand, n, carte_terra) => {
   });
   list_html.push(html);
   list_html.push(
-    `<button class="btn-outline droppa" type="button" disabled>Tira</button> `,
+    `<button class="button btn btn-info droppa" type="button" disabled>Tira</button> `,
   );
   html = "";
   carte_terra.forEach((element) => {

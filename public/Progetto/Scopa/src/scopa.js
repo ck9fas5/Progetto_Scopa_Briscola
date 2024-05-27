@@ -27,7 +27,6 @@ const div_game = document.getElementById("game");
 const b_startgame = document.getElementById("startgame");
 const turn = document.getElementById("turn");
 const div_creategame = document.getElementById("creategame");
-const gioca_ancora = document.getElementById("gioca_ancora");
 const abbandona = document.getElementById("principale");
 const modal = document.getElementById("resultmodal");
 const myModal = new bootstrap.Modal(modal, {});
@@ -86,14 +85,14 @@ socket.on("invited", (utente) => {
   };
 });
 
-gioca_ancora.onclick = () => {
+function gioca_ancora() {
   myModal.hide();
   ricarica.classList.remove("d-none");
   let html = render_scope([]);
   scope.innerHTML = html;
   socket.emit("reset", { punti: punteggi, room: room });
   console.log(punteggi, room);
-};
+}
 
 abbandona.onclick = () => {
   socket.emit("quit", room);
@@ -231,14 +230,14 @@ socket.on("fine partita", async (punti) => {
   myModal.show();
   const vit = document.getElementById("vittoria");
   vit.innerHTML = vittoria;
-  let secondi = 5;
+  let secondi = 10;
   const countdownInterval = setInterval(() => {
     if (secondi > 0) {
       document.getElementById("countdown").innerHTML = secondi;
       secondi -= 1;
     } else {
       clearInterval(countdownInterval);
-      gioca_ancora.click();
+      gioca_ancora();
     }
   }, 1000);
 });
@@ -510,7 +509,6 @@ socket.on("start scopa", (istance) => {
 socket.on("start turn scopa", () => {
   turn.innerHTML = "Ѐ il tuo turno";
   turn.classList.add("gradiant");
-  console.log("32s");
   click_carte();
 });
 
