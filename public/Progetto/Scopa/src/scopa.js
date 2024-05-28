@@ -91,7 +91,7 @@ function gioca_ancora() {
   let html = render_scope([]);
   scope.innerHTML = html;
   socket.emit("reset", { punti: punteggi, room: room });
-  console.log(punteggi, room);
+  socket.emit("start game scopa", room);
 }
 
 abbandona.onclick = () => {
@@ -182,10 +182,11 @@ socket.on("fine partita", async (punti) => {
     }
   });
   let sc = 0;
+  console.log(punteggi);
   user.forEach((element) => {
     if (
       punteggi.length === 0 ||
-      punteggi.find((el) => el.id_user === element.id_user) === undefined
+      punteggi.find((el) => el.username === element.id_user) === undefined
     ) {
       if (scp.find((u) => u.id === element.id_user) !== undefined) {
         sc = scp.find((u) => u.id === element.id_user).scope;
@@ -487,6 +488,8 @@ async function click_carte() {
 
 socket.on("start scopa", (istance) => {
   console.log(istance);
+  turn.innerHTML = "";
+  turn.classList.remove("gradiant");
   ricarica.classList.add("d-none");
   div_creategame.classList.add("d-none");
   div_waiting.classList.add("d-none");

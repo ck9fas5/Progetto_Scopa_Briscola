@@ -22,6 +22,9 @@ let l = [];
 let punti = [];
 let scopa = [];
 let ultimi = "";
+let deck = [];
+let order = [];
+let index;
 
 const GetUser = async () => {
   let users = await db.getting("User");
@@ -436,7 +439,8 @@ io.on("connection", (socket) => {
     });
   });
 
-  const startGameScopa = async (gameRoom) => {
+  //gestione partita di scopa
+  socket.on("start game scopa", async (gameRoom) => {
     console.log(gameRoom, "E");
     let room = games.find((g) => g.room === gameRoom);
     games[games.indexOf(room)]["state"] = true;
@@ -446,7 +450,7 @@ io.on("connection", (socket) => {
     if (started_games.find((s) => s.room === sg.room) === undefined) {
       started_games.push(sg);
     }
-    console.log(sg);
+    console.log(sg, "ey");
     let carte_terra = sg.deck.slice(0, 4);
     sg.card = carte_terra;
     sg.deck.splice(0, 4);
@@ -464,15 +468,14 @@ io.on("connection", (socket) => {
       });
     });
     io.to(sg.order[0]).emit("start turn scopa");
-  };
-
-  //gestione partita di scopa
-  socket.on("start game scopa", startGameScopa);
+  });
 
   socket.on("end turn scopa", async (game) => {
     let sg = started_games.find((s) => s.room === game.room);
     let user = sg.taken_card.find((is) => is.user === sg.order[sg.index]);
-    console.log(sg.taken_card[0].mazzo, "23c");
+    sg.deck = deck;
+    sg.order = order;
+    console.log(sg, "ee");
     if (game.carte_prese.length > 0) {
       game.carte_prese.forEach((card) => {
         if (card !== "") {
@@ -486,7 +489,6 @@ io.on("connection", (socket) => {
       ultimi = user.user;
     }
 
-    console.log(sg.taken_card[0].mazzo);
     if (game.hand.length === 0) {
       l.push("w");
     }
@@ -621,15 +623,10 @@ io.on("connection", (socket) => {
         scope: scopa,
         carte: length_card,
       });
-      sg.taken_card.forEach((element) => {
-        element.mazzo = [];
-      });
-      sg.deck = await GetCarte();
-      briscola.shuffleArray(sg.deck);
     }
   });
 
-  socket.on("reset", (game) => {
+  socket.on("reset", async (game) => {
     console.log(game.room, "!23!");
     if (game.punti.find((el) => el.punti === 11) !== undefined) {
       started_games.splice(
@@ -645,9 +642,10 @@ io.on("connection", (socket) => {
       punti = [];
       scopa = [];
       ultimi = "";
-      console.log(started_games, "£");
-      //socket.to(game.room).emit("start game scopa", game.room);
-      startGameScopa(game.room);
+      let sg = started_games.find((s) => s.room === game.room);
+      sg.taken_card.forEach((element) => {
+        element.mazzo = [];
+      });
     }
   });
 });
@@ -655,13 +653,13 @@ io.on("connection", (socket) => {
 async function SetUpGameScopa(room) {
   let type = "s";
 
-  let order = room.users.slice(0); //ottiene una lista di socket_id mescolata a caso
+  order = room.users.slice(0); //ottiene una lista di socket_id mescolata a caso
   briscola.shuffleArray(order);
 
-  let deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
+  deck = await GetCarte(); //ottiene una lista di carte (40) mescolate a caso
   briscola.shuffleArray(deck);
 
-  let index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn
+  index = 0; //variabile che scandisce l'ordine del gioco perchè usata per emettere evento star turn
   let taken_card = order.map((p) => ({ user: p, mazzo: [], preso: false })); //crea i "mazzetti di ogni giocatore"
 
   let sg = {
